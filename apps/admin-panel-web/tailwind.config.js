@@ -9,13 +9,16 @@
 // If you are **not** using `--turbo` you can uncomment both lines 1 & 19.
 // A discussion of the issue can be found: https://github.com/nrwl/nx/issues/26510
 
+const sharedTheme = require("@hirenova/ui/tailwind.config.js");
+
 /** @type {import('tailwindcss').Config} */
 module.exports = {
   content: [
     './{src,pages,components,app}/**/*.{ts,tsx,js,jsx,html}',
     '!./{src,pages,components,app}/**/*.{stories,spec}.{ts,tsx,js,jsx,html}',
-    //     ...createGlobPatternsForDependencies(__dirname)
+    "../../libs/ui/src/**/*.{js,ts,jsx,tsx}",
   ],
+  presets: [sharedTheme],
   theme: {
     extend: {},
   },
