@@ -1,0 +1,1095 @@
+// Unified Prisma Schema
+// Single database with models organized by category: Auth, Job, Company, Vendor
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// ============================================
+// Shared Enums
+// ============================================
+
+enum PermissionScope {
+  SYSTEM
+  COMPANY
+  VENDOR
+}
+
+enum JobStatus {
+  DRAFT
+  PUBLISHED
+  CLOSED
+  PAUSED
+}
+
+enum ApplicationStatus {
+  PENDING
+  REVIEWING
+  SHORTLISTED
+  INTERVIEW_SCHEDULED
+  OFFERED
+  ACCEPTED
+  REJECTED
+  WITHDRAWN
+}
+
+enum AuditAction {
+  CREATE
+  UPDATE
+  DELETE
+  VIEW
+  APPROVE
+  REJECT
+  PUBLISH
+  ARCHIVE
+}
+
+enum WorkflowStatus {
+  PENDING
+  IN_PROGRESS
+  APPROVED
+  REJECTED
+  CANCELLED
+}
+
+enum CustomFieldType {
+  TEXT
+  NUMBER
+  DATE
+  BOOLEAN
+  SELECT
+  MULTI_SELECT
+  JSON
+}
+
+// ============================================
+// ERP FOUNDATION - Multi-Tenancy & Audit
+// ============================================
+
+model Tenant {
+  id      String  @id @default(cuid())
+  name    String
+  slug    String  @unique
+  email   String  @unique
+  phone   String?
+  website String?
+  logoUrl String?
+
+  // Subscription & Billing
+  subscriptionPlan      String? // e.g., "free", "pro", "enterprise"
+  subscriptionStatus    String? // e.g., "active", "trial", "expired", "cancelled"
+  subscriptionStartDate DateTime?
+  subscriptionEndDate   DateTime?
+  maxUsers              Int?      @default(10)
+  maxJobs               Int?      @default(100)
+
+  // Settings
+  settings Json? // Tenant-specific settings (JSON)
+  features Json? // Enabled features (JSON)
+
+  // Status
+  isActive   Boolean @default(true)
+  isVerified Boolean @default(false)
+
+  // Timestamps
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+
+  // Relationships
+  users        User[]
+  companies    Company[]
+  vendors      Vendor[]
+  jobs         Job[]
+  customFields CustomField[]
+  workflows    Workflow[]
+  auditLogs    AuditLog[]
+
+  @@index([slug])
+  @@index([email])
+  @@index([isActive, deletedAt])
+  @@map("tenants")
+}
+
+model AuditLog {
+  id       String  @id @default(cuid())
+  tenantId String? // Optional for system-level audits
+
+  // Entity Information
+  entityType String // e.g., "User", "Job", "Company"
+  entityId   String
+
+  // Action Details
+  action   AuditAction
+  changes  Json? // Before/after values (JSON)
+  metadata Json? // Additional context (JSON)
+
+  // User Tracking
+  userId    String? // User who performed the action
+  userEmail String? // Cached for quick lookup
+  ipAddress String?
+  userAgent String?
+
+  // Timestamps
+  createdAt DateTime @default(now())
+
+  // Relationships
+  user   User?   @relation(fields: [userId], references: [id], onDelete: SetNull)
+  tenant Tenant? @relation(fields: [tenantId], references: [id], onDelete: SetNull)
+
+  @@index([entityType, entityId])
+  @@index([tenantId, createdAt])
+  @@index([userId, createdAt])
+  @@index([action, createdAt])
+  @@index([createdAt])
+  @@map("audit_logs")
+}
+
+// ============================================
+// AUTH CATEGORY - User Authentication & Profile
+// ============================================
+
+model User {
+  id        String  @id @default(cuid())
+  tenantId  String? // Multi-tenancy support
+  email     String  @unique
+  password  String?
+  firstName String?
+  lastName  String?
+  phone     String?
+  avatarUrl String?
+
+  // Profile fields
+  shortDescription     String?  @db.Text
+  profileSummary       String?  @db.Text
+  currentJobFunction   String?
+  linkedInProfile      String?
+  yearsOfExperience    String?
+  preferredLocation    String?
+  noticePeriod         String?
+  preferredWorkModel   String?
+  currentAnnualSalary  Decimal? @db.Decimal(10, 2)
+  expectedAnnualSalary Decimal? @db.Decimal(10, 2)
+
+  // ERP Enhancements
+  metadata Json? // Custom fields and extensible data (JSON)
+  version  Int   @default(1) // Optimistic locking
+
+  // Status
+  emailVerified Boolean @default(false)
+  isActive      Boolean @default(true)
+
+  // Timestamps
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+  deletedAt  DateTime?
+  archivedAt DateTime?
+
+  // Audit Fields
+  createdBy String?
+  updatedBy String?
+
+  // Relationships
+  tenant       Tenant? @relation(fields: [tenantId], references: [id], onDelete: SetNull)
+  creator      User?   @relation("UserCreatedBy", fields: [createdBy], references: [id], onDelete: SetNull)
+  updater      User?   @relation("UserUpdatedBy", fields: [updatedBy], references: [id], onDelete: SetNull)
+  createdUsers User[]  @relation("UserCreatedBy")
+  updatedUsers User[]  @relation("UserUpdatedBy")
+
+  systemRole   SystemRole? @relation("UserSystemRole", fields: [systemRoleId], references: [id])
+  systemRoleId String?     @unique
+
+  companyUsers CompanyUser[]
+  vendorUsers  VendorUser[]
+
+  jobApplications JobApplication[]
+  savedJobs       SavedJob[]
+  userSkills      UserSkill[]
+  experiences     Experience[]
+  educations      Education[]
+  resumes         Resume[]
+
+  auditLogs                  AuditLog[]
+  versionHistory             VersionHistory[]   @relation("VersionHistoryChangedBy")
+  workflowInstancesStarted   WorkflowInstance[] @relation("WorkflowStartedBy")
+  workflowInstancesCompleted WorkflowInstance[] @relation("WorkflowCompletedBy")
+
+  // Audit relationships - Created/Updated by this user
+  createdSystemRoles     SystemRole[]     @relation("SystemRoleCreatedBy")
+  updatedSystemRoles     SystemRole[]     @relation("SystemRoleUpdatedBy")
+  createdJobs            Job[]            @relation("JobCreatedBy")
+  updatedJobs            Job[]            @relation("JobUpdatedBy")
+  createdCompanies       Company[]        @relation("CompanyCreatedBy")
+  updatedCompanies       Company[]        @relation("CompanyUpdatedBy")
+  createdVendors         Vendor[]         @relation("VendorCreatedBy")
+  updatedVendors         Vendor[]         @relation("VendorUpdatedBy")
+  createdJobApplications JobApplication[] @relation("JobApplicationCreatedBy")
+  updatedJobApplications JobApplication[] @relation("JobApplicationUpdatedBy")
+  createdCompanyUsers    CompanyUser[]    @relation("CompanyUserCreatedBy")
+  updatedCompanyUsers    CompanyUser[]    @relation("CompanyUserUpdatedBy")
+  createdVendorUsers     VendorUser[]     @relation("VendorUserCreatedBy")
+  updatedVendorUsers     VendorUser[]     @relation("VendorUserUpdatedBy")
+  createdCompanyRoles    CompanyRole[]    @relation("CompanyRoleCreatedBy")
+  updatedCompanyRoles    CompanyRole[]    @relation("CompanyRoleUpdatedBy")
+  createdVendorRoles     VendorRole[]     @relation("VendorRoleCreatedBy")
+  updatedVendorRoles     VendorRole[]     @relation("VendorRoleUpdatedBy")
+
+  @@unique([tenantId, email])
+  @@index([email])
+  @@index([tenantId, isActive, deletedAt])
+  @@index([deletedAt])
+  @@index([archivedAt])
+  @@map("users")
+}
+
+model SystemRole {
+  id          String  @id @default(cuid())
+  name        String  @unique
+  description String? @db.Text
+
+  // ERP Enhancements
+  version  Int   @default(1)
+  metadata Json?
+
+  // Timestamps
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+  deletedAt  DateTime?
+  archivedAt DateTime?
+
+  // Audit Fields
+  createdBy String?
+  updatedBy String?
+
+  // Relationships
+  users       User[]                 @relation("UserSystemRole")
+  permissions SystemRolePermission[]
+
+  creator User? @relation("SystemRoleCreatedBy", fields: [createdBy], references: [id], onDelete: SetNull)
+  updater User? @relation("SystemRoleUpdatedBy", fields: [updatedBy], references: [id], onDelete: SetNull)
+
+  @@index([deletedAt])
+  @@index([archivedAt])
+  @@map("system_roles")
+}
+
+model SystemPermission {
+  id          String          @id @default(cuid())
+  name        String          @unique
+  description String?         @db.Text
+  scope       PermissionScope @default(SYSTEM)
+
+  // Timestamps
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relationships
+  systemRolePermissions SystemRolePermission[]
+
+  @@map("system_permissions")
+}
+
+model SystemRolePermission {
+  id           String @id @default(cuid())
+  roleId       String
+  permissionId String
+
+  // Timestamps
+  createdAt DateTime @default(now())
+
+  // Relationships
+  role       SystemRole       @relation(fields: [roleId], references: [id], onDelete: Cascade)
+  permission SystemPermission @relation(fields: [permissionId], references: [id], onDelete: Cascade)
+
+  @@unique([roleId, permissionId])
+  @@index([roleId])
+  @@index([permissionId])
+  @@map("system_role_permissions")
+}
+
+model Skill {
+  id          String  @id @default(cuid())
+  name        String  @unique
+  category    String?
+  description String? @db.Text
+
+  // Timestamps
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relationships
+  userSkills UserSkill[]
+  jobSkills  JobSkill[]
+
+  @@index([name])
+  @@map("skills")
+}
+
+model UserSkill {
+  id          String  @id @default(cuid())
+  userId      String
+  skillId     String
+  proficiency String? // e.g., "Beginner", "Intermediate", "Advanced", "Expert"
+
+  // Timestamps
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relationships
+  user  User  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  skill Skill @relation(fields: [skillId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, skillId])
+  @@index([userId])
+  @@index([skillId])
+  @@map("user_skills")
+}
+
+model Experience {
+  id     String @id @default(cuid())
+  userId String
+
+  // Experience Details
+  title          String
+  company        String
+  employmentType String?
+  location       String?
+  description    String? @db.Text
+
+  // Dates
+  startDate DateTime
+  endDate   DateTime?
+  isCurrent Boolean   @default(false)
+
+  // Timestamps
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+
+  // Relationships
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([deletedAt])
+  @@map("experiences")
+}
+
+model Education {
+  id     String @id @default(cuid())
+  userId String
+
+  // Education Details
+  degree       String
+  institution  String
+  fieldOfStudy String?
+  location     String?
+  description  String? @db.Text
+
+  // Dates & Grades
+  startDate   DateTime?
+  endDate     DateTime?
+  grade       String?
+  isCompleted Boolean   @default(false)
+
+  // Timestamps
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+
+  // Relationships
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([deletedAt])
+  @@map("educations")
+}
+
+model Resume {
+  id     String @id @default(cuid())
+  userId String
+
+  // File Details
+  fileName  String
+  fileUrl   String
+  fileSize  Int? // in bytes
+  mimeType  String?
+  isPrimary Boolean @default(false)
+
+  // Timestamps
+  uploadedAt DateTime  @default(now())
+  deletedAt  DateTime?
+
+  // Relationships
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([deletedAt])
+  @@map("resumes")
+}
+
+// ============================================
+// JOB CATEGORY - Job Postings & Applications
+// ============================================
+
+model Job {
+  id        String  @id @default(cuid())
+  tenantId  String? // Multi-tenancy support
+  companyId String
+
+  // Basic Info
+  title       String
+  description String? @db.Text
+  jobOverview String? @db.Text
+
+  // Employment Details
+  employmentType   String?
+  workModel        String?
+  location         String?
+  country          String?
+  state            String?
+  city             String?
+  numberOfOpenings Int     @default(1)
+
+  // Experience & Qualification
+  experienceLevel      String?
+  minExperience        Int?
+  maxExperience        Int?
+  educationRequirement String?
+
+  // Compensation
+  minSalary    Decimal? @db.Decimal(10, 2)
+  maxSalary    Decimal? @db.Decimal(10, 2)
+  currency     String?
+  paymentType  String?
+  noticePeriod String?
+
+  // ERP Enhancements
+  metadata Json? // Custom fields and extensible data
+  version  Int   @default(1) // Optimistic locking
+
+  // Status
+  status JobStatus @default(DRAFT)
+
+  // Timestamps
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  publishedAt DateTime?
+  closedAt    DateTime?
+  deletedAt   DateTime?
+  archivedAt  DateTime?
+
+  // Audit Fields
+  createdBy String?
+  updatedBy String?
+
+  // Relationships
+  tenant         Tenant?          @relation(fields: [tenantId], references: [id], onDelete: SetNull)
+  company        Company          @relation(fields: [companyId], references: [id])
+  creator        User?            @relation("JobCreatedBy", fields: [createdBy], references: [id], onDelete: SetNull)
+  updater        User?            @relation("JobUpdatedBy", fields: [updatedBy], references: [id], onDelete: SetNull)
+  applications   JobApplication[]
+  savedByUsers   SavedJob[]
+  requiredSkills JobSkill[]
+
+  @@index([tenantId, companyId, status])
+  @@index([tenantId, status, deletedAt])
+  @@index([companyId, status])
+  @@index([status, deletedAt])
+  @@index([deletedAt])
+  @@index([archivedAt])
+  @@index([createdAt])
+  @@map("jobs")
+}
+
+model JobApplication {
+  id     String @id @default(cuid())
+  jobId  String
+  userId String
+
+  // Application Details
+  coverLetter String?           @db.Text
+  status      ApplicationStatus @default(PENDING)
+
+  // ERP Enhancements
+  metadata Json?
+  version  Int   @default(1)
+
+  // Timestamps
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+  deletedAt  DateTime?
+  archivedAt DateTime?
+
+  // Audit Fields
+  createdBy String?
+  updatedBy String?
+
+  // Relationships
+  job     Job   @relation(fields: [jobId], references: [id])
+  user    User  @relation(fields: [userId], references: [id])
+  creator User? @relation("JobApplicationCreatedBy", fields: [createdBy], references: [id], onDelete: SetNull)
+  updater User? @relation("JobApplicationUpdatedBy", fields: [updatedBy], references: [id], onDelete: SetNull)
+
+  @@unique([jobId, userId])
+  @@index([jobId, userId])
+  @@index([userId, status])
+  @@index([jobId, status])
+  @@index([status, deletedAt])
+  @@index([deletedAt])
+  @@index([archivedAt])
+  @@map("job_applications")
+}
+
+model SavedJob {
+  id     String @id @default(cuid())
+  jobId  String
+  userId String
+
+  // Timestamps
+  createdAt DateTime @default(now())
+
+  // Relationships
+  job  Job  @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([jobId, userId])
+  @@index([userId])
+  @@index([jobId])
+  @@map("saved_jobs")
+}
+
+model JobSkill {
+  id         String  @id @default(cuid())
+  jobId      String
+  skillId    String
+  isRequired Boolean @default(true)
+
+  // Timestamps
+  createdAt DateTime @default(now())
+
+  // Relationships
+  job   Job   @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  skill Skill @relation(fields: [skillId], references: [id], onDelete: Cascade)
+
+  @@unique([jobId, skillId])
+  @@index([jobId])
+  @@index([skillId])
+  @@map("job_skills")
+}
+
+// ============================================
+// COMPANY CATEGORY - Company Management
+// ============================================
+
+model Company {
+  id       String  @id @default(cuid())
+  tenantId String? // Multi-tenancy support
+  name     String
+  email    String  @unique
+  phone    String?
+  website  String?
+  logoUrl  String?
+
+  // Company details
+  description String? @db.Text
+  address     String? @db.Text
+  country     String?
+  state       String?
+  city        String?
+  industry    String?
+  companySize String?
+  workModel   String?
+  gstin       String?
+  linkedInUrl String?
+
+  // ERP Enhancements
+  metadata Json? // Custom fields and extensible data
+  version  Int   @default(1) // Optimistic locking
+
+  // Status
+  isVerified Boolean @default(false)
+  isActive   Boolean @default(true)
+
+  // Timestamps
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+  deletedAt  DateTime?
+  archivedAt DateTime?
+
+  // Audit Fields
+  createdBy String?
+  updatedBy String?
+
+  // Relationships
+  tenant       Tenant?       @relation(fields: [tenantId], references: [id], onDelete: SetNull)
+  creator      User?         @relation("CompanyCreatedBy", fields: [createdBy], references: [id], onDelete: SetNull)
+  updater      User?         @relation("CompanyUpdatedBy", fields: [updatedBy], references: [id], onDelete: SetNull)
+  companyUsers CompanyUser[]
+  companyRoles CompanyRole[]
+  jobs         Job[]
+
+  @@unique([tenantId, email])
+  @@index([email])
+  @@index([tenantId, isActive, deletedAt])
+  @@index([deletedAt])
+  @@index([archivedAt])
+  @@map("companies")
+}
+
+model CompanyUser {
+  id        String @id @default(cuid())
+  userId    String
+  companyId String
+  roleId    String
+
+  // ERP Enhancements
+  metadata Json?
+  version  Int   @default(1)
+
+  // Status
+  isActive Boolean @default(true)
+
+  // Timestamps
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+  deletedAt  DateTime?
+  archivedAt DateTime?
+
+  // Audit Fields
+  createdBy String?
+  updatedBy String?
+
+  // Relationships
+  user    User        @relation(fields: [userId], references: [id])
+  company Company     @relation(fields: [companyId], references: [id])
+  role    CompanyRole @relation(fields: [roleId], references: [id])
+  creator User?       @relation("CompanyUserCreatedBy", fields: [createdBy], references: [id], onDelete: SetNull)
+  updater User?       @relation("CompanyUserUpdatedBy", fields: [updatedBy], references: [id], onDelete: SetNull)
+
+  @@unique([userId, companyId])
+  @@index([userId, companyId])
+  @@index([companyId, isActive, deletedAt])
+  @@index([roleId])
+  @@index([deletedAt])
+  @@index([archivedAt])
+  @@map("company_users")
+}
+
+model CompanyRole {
+  id          String  @id @default(cuid())
+  companyId   String
+  name        String
+  description String? @db.Text
+
+  // ERP Enhancements
+  metadata Json?
+  version  Int   @default(1)
+
+  // Timestamps
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+  deletedAt  DateTime?
+  archivedAt DateTime?
+
+  // Audit Fields
+  createdBy String?
+  updatedBy String?
+
+  // Relationships
+  company     Company                 @relation(fields: [companyId], references: [id])
+  users       CompanyUser[]
+  permissions CompanyRolePermission[]
+  creator     User?                   @relation("CompanyRoleCreatedBy", fields: [createdBy], references: [id], onDelete: SetNull)
+  updater     User?                   @relation("CompanyRoleUpdatedBy", fields: [updatedBy], references: [id], onDelete: SetNull)
+
+  @@unique([companyId, name])
+  @@index([companyId, deletedAt])
+  @@index([deletedAt])
+  @@index([archivedAt])
+  @@map("company_roles")
+}
+
+model CompanyPermission {
+  id          String          @id @default(cuid())
+  name        String          @unique
+  description String?         @db.Text
+  scope       PermissionScope @default(COMPANY)
+
+  // Timestamps
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relationships
+  companyRolePermissions CompanyRolePermission[]
+
+  @@map("company_permissions")
+}
+
+model CompanyRolePermission {
+  id           String @id @default(cuid())
+  roleId       String
+  permissionId String
+
+  // Timestamps
+  createdAt DateTime @default(now())
+
+  // Relationships
+  role       CompanyRole       @relation(fields: [roleId], references: [id], onDelete: Cascade)
+  permission CompanyPermission @relation(fields: [permissionId], references: [id], onDelete: Cascade)
+
+  @@unique([roleId, permissionId])
+  @@index([roleId])
+  @@index([permissionId])
+  @@map("company_role_permissions")
+}
+
+// ============================================
+// VENDOR CATEGORY - Vendor Management
+// ============================================
+
+model Vendor {
+  id       String  @id @default(cuid())
+  tenantId String? // Multi-tenancy support
+  name     String
+  email    String  @unique
+  phone    String?
+  website  String?
+  logoUrl  String?
+
+  // Vendor details
+  description String? @db.Text
+  address     String? @db.Text
+  country     String?
+  state       String?
+  city        String?
+  industry    String?
+  vendorSize  String?
+  workModel   String?
+  gstin       String?
+  linkedInUrl String?
+
+  // ERP Enhancements
+  metadata Json? // Custom fields and extensible data
+  version  Int   @default(1) // Optimistic locking
+
+  // Status
+  isVerified Boolean @default(false)
+  isActive   Boolean @default(true)
+
+  // Timestamps
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+  deletedAt  DateTime?
+  archivedAt DateTime?
+
+  // Audit Fields
+  createdBy String?
+  updatedBy String?
+
+  // Relationships
+  tenant      Tenant?      @relation(fields: [tenantId], references: [id], onDelete: SetNull)
+  creator     User?        @relation("VendorCreatedBy", fields: [createdBy], references: [id], onDelete: SetNull)
+  updater     User?        @relation("VendorUpdatedBy", fields: [updatedBy], references: [id], onDelete: SetNull)
+  vendorUsers VendorUser[]
+  vendorRoles VendorRole[]
+
+  @@unique([tenantId, email])
+  @@index([email])
+  @@index([tenantId, isActive, deletedAt])
+  @@index([deletedAt])
+  @@index([archivedAt])
+  @@map("vendors")
+}
+
+model VendorUser {
+  id       String @id @default(cuid())
+  userId   String
+  vendorId String
+  roleId   String
+
+  // ERP Enhancements
+  metadata Json?
+  version  Int   @default(1)
+
+  // Status
+  isActive Boolean @default(true)
+
+  // Timestamps
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+  deletedAt  DateTime?
+  archivedAt DateTime?
+
+  // Audit Fields
+  createdBy String?
+  updatedBy String?
+
+  // Relationships
+  user    User       @relation(fields: [userId], references: [id])
+  vendor  Vendor     @relation(fields: [vendorId], references: [id])
+  role    VendorRole @relation(fields: [roleId], references: [id])
+  creator User?      @relation("VendorUserCreatedBy", fields: [createdBy], references: [id], onDelete: SetNull)
+  updater User?      @relation("VendorUserUpdatedBy", fields: [updatedBy], references: [id], onDelete: SetNull)
+
+  @@unique([userId, vendorId])
+  @@index([userId, vendorId])
+  @@index([vendorId, isActive, deletedAt])
+  @@index([roleId])
+  @@index([deletedAt])
+  @@index([archivedAt])
+  @@map("vendor_users")
+}
+
+model VendorRole {
+  id          String  @id @default(cuid())
+  vendorId    String
+  name        String
+  description String? @db.Text
+
+  // ERP Enhancements
+  metadata Json?
+  version  Int   @default(1)
+
+  // Timestamps
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+  deletedAt  DateTime?
+  archivedAt DateTime?
+
+  // Audit Fields
+  createdBy String?
+  updatedBy String?
+
+  // Relationships
+  vendor      Vendor                 @relation(fields: [vendorId], references: [id])
+  users       VendorUser[]
+  permissions VendorRolePermission[]
+  creator     User?                  @relation("VendorRoleCreatedBy", fields: [createdBy], references: [id], onDelete: SetNull)
+  updater     User?                  @relation("VendorRoleUpdatedBy", fields: [updatedBy], references: [id], onDelete: SetNull)
+
+  @@unique([vendorId, name])
+  @@index([vendorId, deletedAt])
+  @@index([deletedAt])
+  @@index([archivedAt])
+  @@map("vendor_roles")
+}
+
+model VendorPermission {
+  id          String          @id @default(cuid())
+  name        String          @unique
+  description String?         @db.Text
+  scope       PermissionScope @default(VENDOR)
+
+  // Timestamps
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relationships
+  vendorRolePermissions VendorRolePermission[]
+
+  @@map("vendor_permissions")
+}
+
+model VendorRolePermission {
+  id           String @id @default(cuid())
+  roleId       String
+  permissionId String
+
+  // Timestamps
+  createdAt DateTime @default(now())
+
+  // Relationships
+  role       VendorRole       @relation(fields: [roleId], references: [id], onDelete: Cascade)
+  permission VendorPermission @relation(fields: [permissionId], references: [id], onDelete: Cascade)
+
+  @@unique([roleId, permissionId])
+  @@index([roleId])
+  @@index([permissionId])
+  @@map("vendor_role_permissions")
+}
+
+// ============================================
+// ERP WORKFLOW SYSTEM - Approval Workflows
+// ============================================
+
+model Workflow {
+  id          String  @id @default(cuid())
+  tenantId    String?
+  name        String
+  description String? @db.Text
+  entityType  String // e.g., "Job", "Company", "User"
+
+  // Workflow Configuration
+  isActive  Boolean @default(true)
+  isDefault Boolean @default(false) // Default workflow for entity type
+
+  // Timestamps
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+
+  // Relationships
+  tenant    Tenant?            @relation(fields: [tenantId], references: [id], onDelete: SetNull)
+  steps     WorkflowStep[]
+  instances WorkflowInstance[]
+
+  @@unique([tenantId, entityType, name])
+  @@index([tenantId, entityType, isActive])
+  @@index([deletedAt])
+  @@map("workflows")
+}
+
+model WorkflowStep {
+  id          String  @id @default(cuid())
+  workflowId  String
+  stepOrder   Int // Order of step in workflow
+  name        String
+  description String? @db.Text
+
+  // Step Configuration
+  approverRoleId String? // Role required to approve this step
+  isRequired     Boolean @default(true)
+  canSkip        Boolean @default(false)
+
+  // Timestamps
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relationships
+  workflow          Workflow           @relation(fields: [workflowId], references: [id], onDelete: Cascade)
+  workflowInstances WorkflowInstance[]
+
+  @@unique([workflowId, stepOrder])
+  @@index([workflowId])
+  @@map("workflow_steps")
+}
+
+model WorkflowInstance {
+  id         String @id @default(cuid())
+  workflowId String
+  entityType String // e.g., "Job", "Company"
+  entityId   String // ID of the entity in workflow
+
+  // Current State
+  currentStepId String?
+  status        WorkflowStatus @default(PENDING)
+
+  // Tracking
+  startedBy   String?
+  completedBy String?
+  completedAt DateTime?
+
+  // Timestamps
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relationships
+  workflow    Workflow      @relation(fields: [workflowId], references: [id])
+  currentStep WorkflowStep? @relation(fields: [currentStepId], references: [id], onDelete: SetNull)
+  starter     User?         @relation("WorkflowStartedBy", fields: [startedBy], references: [id], onDelete: SetNull)
+  completer   User?         @relation("WorkflowCompletedBy", fields: [completedBy], references: [id], onDelete: SetNull)
+
+  @@unique([entityType, entityId])
+  @@index([workflowId, status])
+  @@index([entityType, entityId])
+  @@index([status, createdAt])
+  @@map("workflow_instances")
+}
+
+// ============================================
+// ERP VERSION HISTORY - Change Tracking
+// ============================================
+
+model VersionHistory {
+  id         String @id @default(cuid())
+  entityType String // e.g., "User", "Job", "Company"
+  entityId   String
+
+  // Version Information
+  version    Int // Version number
+  changes    Json // Snapshot of entity at this version
+  changeType String // "CREATE", "UPDATE", "DELETE"
+
+  // Tracking
+  changedBy    String?
+  changeReason String? @db.Text
+
+  // Timestamps
+  createdAt DateTime @default(now())
+
+  // Relationships
+  user User? @relation("VersionHistoryChangedBy", fields: [changedBy], references: [id], onDelete: SetNull)
+
+  @@unique([entityType, entityId, version])
+  @@index([entityType, entityId])
+  @@index([entityType, entityId, version])
+  @@index([changedBy, createdAt])
+  @@map("version_history")
+}
+
+// ============================================
+// ERP CUSTOM FIELDS - Dynamic Field System
+// ============================================
+
+model CustomField {
+  id         String          @id @default(cuid())
+  tenantId   String? // Null for global fields
+  entityType String // e.g., "User", "Job", "Company"
+  name       String
+  label      String
+  fieldType  CustomFieldType
+
+  // Field Configuration
+  isRequired      Boolean @default(false)
+  defaultValue    String?
+  validationRules Json? // Validation rules (JSON)
+  options         Json? // For SELECT/MULTI_SELECT types (JSON array)
+
+  // Display
+  displayOrder Int     @default(0)
+  isVisible    Boolean @default(true)
+
+  // Timestamps
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+
+  // Relationships
+  tenant Tenant?            @relation(fields: [tenantId], references: [id], onDelete: SetNull)
+  values CustomFieldValue[]
+
+  @@unique([tenantId, entityType, name])
+  @@index([tenantId, entityType, isVisible])
+  @@index([entityType, deletedAt])
+  @@map("custom_fields")
+}
+
+model CustomFieldValue {
+  id            String @id @default(cuid())
+  customFieldId String
+  entityType    String // e.g., "User", "Job"
+  entityId      String // ID of the entity
+
+  // Value Storage (flexible based on field type)
+  textValue    String?   @db.Text
+  numberValue  Decimal?  @db.Decimal(20, 6)
+  dateValue    DateTime?
+  booleanValue Boolean?
+  jsonValue    Json?
+
+  // Timestamps
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relationships
+  customField CustomField @relation(fields: [customFieldId], references: [id], onDelete: Cascade)
+
+  @@unique([customFieldId, entityType, entityId])
+  @@index([entityType, entityId])
+  @@index([customFieldId])
+  @@map("custom_field_values")
+}
