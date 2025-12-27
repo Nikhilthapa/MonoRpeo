@@ -1,0 +1,23 @@
+{
+  "name": "@org/api-gateway",
+  "version": "0.0.1",
+  "private": true,
+  "dependencies": {
+    "@nestjs/axios": "^4.0.1",
+    "@nestjs/common": "^11.0.0",
+    "@nestjs/core": "^11.0.0",
+    "@nestjs/platform-express": "^11.0.0",
+    "@org/contracts": "workspace:*",
+    "@org/database": "workspace:*",
+    "@org/utils": "workspace:*",
+    "@types/express": "^5.0.6",
+    "express": "^5.2.1",
+    "pg": "^8.16.3",
+    "reflect-metadata": "^0.1.13",
+    "rxjs": "^7.8.0",
+    "tslib": "^2.3.0"
+  },
+  "devDependencies": {
+    "@nestjs/testing": "^11.0.0"
+  }
+}

@@ -1,0 +1,46 @@
+{
+  "extends": "./tsconfig.base.json",
+  "compileOnSave": false,
+  "files": [],
+  "references": [
+    {
+      "path": "./apps/api-gateway-e2e"
+    },
+    {
+      "path": "./apps/api-gateway"
+    },
+    {
+      "path": "./libs/backend/database"
+    },
+    {
+      "path": "./libs/backend/messaging"
+    },
+    {
+      "path": "./libs/shared/contracts"
+    },
+    {
+      "path": "./libs/shared/events"
+    },
+    {
+      "path": "./libs/shared/types"
+    },
+    {
+      "path": "./libs/shared/utils"
+    },
+    {
+      "path": "./libs/ui"
+    },
+    {
+      "path": "./apps/web/admin-web-e2e"
+    },
+    {
+      "path": "./apps/web/admin-web"
+    },
+    {
+      "path": "./apps/web/home-web-e2e"
+    },
+    {
+      "path": "./apps/web/home-web"
+    }
+  ]
+}

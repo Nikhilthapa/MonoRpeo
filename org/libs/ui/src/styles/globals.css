@@ -1,0 +1,60 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@theme {
+  --color-primary: #7F5BFF;
+  --color-primary-dark: #57447F;
+  --color-secondary: #57447F;
+  --color-tertiary: #AF89FF;
+  --color-background: #110128;
+  --color-background-accent: #281A3D;
+  --color-card: #1A0B2E;
+  --color-text-main: #FFFFFF;
+  --color-text-first: #E5E5E5;
+  --color-text-second: #CCCCCC;
+  --color-black-shade: #1F2937;
+  --color-border: #4C2E8A;
+  --color-alert-success: #5DD27A;
+  --color-alert-error: #FF6B6B;
+  --color-alert-warning: #FF8904;
+  --color-alert-success-bg: rgba(93, 210, 122, 0.1);
+  --color-alert-error-bg: rgba(255, 107, 107, 0.1);
+  --color-alert-warning-bg: rgba(255, 137, 4, 0.1);
+}
+
+:root {
+  --background: #110128;
+  --card: #1a0b2e;
+  --border: #4c2e8a;
+}
+
+html,
+body {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  width: 100%;
+}
+
+body {
+  color: white;
+  background: var(--background);
+  font-family: var(--font-space-grotesk, system-ui, sans-serif);
+}
+
+@layer utilities {
+  .text-balance {
+    text-wrap: balance;
+  }
+
+  .text-gradient-kicker {
+    background: linear-gradient(90deg, #7f5bff 0%, #af89ff 51.92%, #e8e4ff 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    display: inline-block;
+    color: transparent;
+  }
+}
+
