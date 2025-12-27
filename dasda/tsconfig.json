@@ -1,0 +1,61 @@
+{
+  "extends": "./tsconfig.base.json",
+  "compileOnSave": false,
+  "files": [],
+  "references": [
+    {
+      "path": "./apps/admin-panel-web"
+    },
+    {
+      "path": "./apps/home-web"
+    },
+    {
+      "path": "./libs/ui"
+    },
+    {
+      "path": "./libs/backend/database"
+    },
+    {
+      "path": "./apps/backend/api-gateway"
+    },
+    {
+      "path": "./apps/backend/audit-service"
+    },
+    {
+      "path": "./apps/backend/auth-service"
+    },
+    {
+      "path": "./apps/backend/company-service"
+    },
+    {
+      "path": "./apps/backend/job-service"
+    },
+    {
+      "path": "./apps/backend/tenant-service"
+    },
+    {
+      "path": "./apps/backend/notification-service"
+    },
+    {
+      "path": "./apps/backend/search-service"
+    },
+    {
+      "path": "./libs/backend/messaging"
+    },
+    {
+      "path": "./libs/my-nest-lib"
+    },
+    {
+      "path": "./libs/shared/contracts"
+    },
+    {
+      "path": "./libs/shared/events"
+    },
+    {
+      "path": "./libs/shared/types"
+    },
+    {
+      "path": "./libs/shared/utils"
+    }
+  ]
+}
