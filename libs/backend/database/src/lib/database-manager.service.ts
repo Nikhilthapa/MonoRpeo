@@ -1,57 +1,57 @@
 import { Injectable, Logger, OnApplicationShutdown } from '@nestjs/common';
 import {
-  jobClient,
-  scraperClient,
-  researchClient,
-  crmClient,
-  contentClient,
-  emailClient,
-} from '..';
+  identityPrisma,
+  tenantPrisma,
+  organizationPrisma,
+  jobPrisma,
+  auditPrisma,
+  workflowPrisma,
+} from '../clients';
 
 type PrismaClientInstance =
-  | typeof jobClient
-  | typeof scraperClient
-  | typeof researchClient
-  | typeof crmClient
-  | typeof contentClient
-  | typeof emailClient;
+  | typeof identityPrisma
+  | typeof tenantPrisma
+  | typeof organizationPrisma
+  | typeof jobPrisma
+  | typeof auditPrisma
+  | typeof workflowPrisma;
 
-type ClientName = 'job' | 'scraper' | 'research' | 'crm' | 'content' | 'email';
+type DomainName = 'identity' | 'tenant' | 'organization' | 'job' | 'audit' | 'workflow';
 
 @Injectable()
 export class DatabaseManager implements OnApplicationShutdown {
   private readonly logger = new Logger(DatabaseManager.name);
-  private clients: Map<ClientName, PrismaClientInstance> = new Map();
-  private connectionPromises: Map<ClientName, Promise<any>> = new Map();
+  private clients: Map<DomainName, PrismaClientInstance> = new Map();
+  private connectionPromises: Map<DomainName, Promise<any>> = new Map();
   private isShuttingDown = false;
   private shutdownPromise: Promise<void> | null = null;
 
   constructor() {
-    this.clients.set('job', jobClient);
-    this.clients.set('scraper', scraperClient);
-    this.clients.set('research', researchClient);
-    this.clients.set('crm', crmClient);
-    this.clients.set('content', contentClient);
-    this.clients.set('email', emailClient);
+    this.clients.set('identity', identityPrisma);
+    this.clients.set('tenant', tenantPrisma);
+    this.clients.set('organization', organizationPrisma);
+    this.clients.set('job', jobPrisma);
+    this.clients.set('audit', auditPrisma);
+    this.clients.set('workflow', workflowPrisma);
   }
 
   async getClient<T extends PrismaClientInstance>(
-    name: ClientName
+    domain: DomainName
   ): Promise<T> {
-    const client = this.clients.get(name) as T;
+    const client = this.clients.get(domain) as T;
     if (!client) {
-      throw new Error(`Database client not found: ${name}`);
+      throw new Error(`Database client not found: ${domain}`);
     }
 
-    if (this.connectionPromises.has(name)) {
-      await this.connectionPromises.get(name);
+    if (this.connectionPromises.has(domain)) {
+      await this.connectionPromises.get(domain);
     } else {
-      const connectionPromise = client.connect();
-      this.connectionPromises.set(name, connectionPromise);
+      const connectionPromise = client.$connect();
+      this.connectionPromises.set(domain, connectionPromise);
       try {
         await connectionPromise;
       } catch (e) {
-        this.connectionPromises.delete(name);
+        this.connectionPromises.delete(domain);
         throw e;
       }
     }
@@ -59,8 +59,31 @@ export class DatabaseManager implements OnApplicationShutdown {
     return client;
   }
 
+  getIdentityClient() {
+    return identityPrisma;
+  }
+
+  getTenantClient() {
+    return tenantPrisma;
+  }
+
+  getOrganizationClient() {
+    return organizationPrisma;
+  }
+
+  getJobClient() {
+    return jobPrisma;
+  }
+
+  getAuditClient() {
+    return auditPrisma;
+  }
+
+  getWorkflowClient() {
+    return workflowPrisma;
+  }
+
   async onApplicationShutdown(signal?: string) {
-    // Prevent duplicate shutdown calls
     if (this.isShuttingDown) {
       this.logger.debug(
         `Shutdown already in progress (signal: ${signal || 'undefined'}), skipping duplicate call`
@@ -77,8 +100,8 @@ export class DatabaseManager implements OnApplicationShutdown {
     this.logger.log(
       `Shutting down database connections (signal: ${signal || 'undefined'})...`
     );
-    const shutdownPromises = Array.from(this.connectionPromises.keys()).map(
-      (name) => this.clients.get(name)?.disconnect()
+    const shutdownPromises = Array.from(this.clients.values()).map(
+      (client) => client.$disconnect()
     );
 
     await Promise.all(shutdownPromises);
@@ -86,15 +109,19 @@ export class DatabaseManager implements OnApplicationShutdown {
   }
 
   async healthCheck(
-    clientNames: ClientName[]
-  ): Promise<{ name: ClientName; isConnected: boolean }[]> {
-    const healthCheckPromises = clientNames.map(async (name) => {
-      const client = this.clients.get(name);
-      if (!client || !this.connectionPromises.has(name)) {
-        return { name, isConnected: false };
+    domains: DomainName[]
+  ): Promise<{ domain: DomainName; isConnected: boolean }[]> {
+    const healthCheckPromises = domains.map(async (domain) => {
+      const client = this.clients.get(domain);
+      if (!client || !this.connectionPromises.has(domain)) {
+        return { domain, isConnected: false };
       }
-      const isConnected = await client.healthCheck();
-      return { name, isConnected };
+      try {
+        await client.$queryRaw`SELECT 1`;
+        return { domain, isConnected: true };
+      } catch {
+        return { domain, isConnected: false };
+      }
     });
 
     return Promise.all(healthCheckPromises);

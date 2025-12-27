@@ -1,8 +1,30 @@
-// AUTH CATEGORY - User Authentication & Profile
+// Identity & Access Management Database Schema
+// Domain: Identity & Access Management
+// Database: identity_db
 
+generator client {
+  provider = "prisma-client-js"
+  output   = "../../../libs/backend/database/src/clients/generated/identity"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("IDENTITY_DATABASE_URL")
+}
+
+// Shared Enums
+enum PermissionScope {
+  SYSTEM
+  COMPANY
+  VENDOR
+}
+
+// ============================================================================
+// USER MODEL
+// ============================================================================
 model User {
   id        String  @id @default(cuid())
-  tenantId  String? // Multi-tenancy support
+  tenantId  String? // Reference to Tenant.id in tenant_db
   email     String  @unique
   password  String?
   firstName String?
@@ -23,8 +45,8 @@ model User {
   expectedAnnualSalary Decimal? @db.Decimal(10, 2)
 
   // ERP Enhancements
-  metadata Json? // Custom fields and extensible data (JSON)
-  version  Int   @default(1) // Optimistic locking
+  metadata Json?
+  version  Int   @default(1)
 
   // Status
   emailVerified Boolean @default(false)
@@ -36,54 +58,28 @@ model User {
   deletedAt  DateTime?
   archivedAt DateTime?
 
-  // Audit Fields
+  // Audit Fields (self-references within same database)
   createdBy String?
   updatedBy String?
 
-  // Relationships
-  tenant       Tenant? @relation(fields: [tenantId], references: [id], onDelete: SetNull)
-  creator      User?   @relation("UserCreatedBy", fields: [createdBy], references: [id], onDelete: SetNull)
-  updater      User?   @relation("UserUpdatedBy", fields: [updatedBy], references: [id], onDelete: SetNull)
-  createdUsers User[]  @relation("UserCreatedBy")
-  updatedUsers User[]  @relation("UserUpdatedBy")
+  // Self-referential relationships (within same database)
+  creator      User?  @relation("UserCreatedBy", fields: [createdBy], references: [id], onDelete: SetNull)
+  updater      User?  @relation("UserUpdatedBy", fields: [updatedBy], references: [id], onDelete: SetNull)
+  createdUsers User[] @relation("UserCreatedBy")
+  updatedUsers User[] @relation("UserUpdatedBy")
 
+  // Relationships within identity database
   systemRole   SystemRole? @relation("UserSystemRole", fields: [systemRoleId], references: [id])
   systemRoleId String?     @unique
 
-  companyUsers CompanyUser[]
-  vendorUsers  VendorUser[]
+  userSkills UserSkill[]
+  experiences Experience[]
+  educations Education[]
+  resumes Resume[]
 
-  jobApplications JobApplication[]
-  savedJobs       SavedJob[]
-  userSkills      UserSkill[]
-  experiences     Experience[]
-  educations      Education[]
-  resumes         Resume[]
-
-  auditLogs                  AuditLog[]
-  versionHistory             VersionHistory[]   @relation("VersionHistoryChangedBy")
-  workflowInstancesStarted   WorkflowInstance[] @relation("WorkflowStartedBy")
-  workflowInstancesCompleted WorkflowInstance[] @relation("WorkflowCompletedBy")
-
-  // Audit relationships - Created/Updated by this user
-  createdSystemRoles     SystemRole[]     @relation("SystemRoleCreatedBy")
-  updatedSystemRoles     SystemRole[]     @relation("SystemRoleUpdatedBy")
-  createdJobs            Job[]            @relation("JobCreatedBy")
-  updatedJobs            Job[]            @relation("JobUpdatedBy")
-  createdCompanies       Company[]        @relation("CompanyCreatedBy")
-  updatedCompanies       Company[]        @relation("CompanyUpdatedBy")
-  createdVendors         Vendor[]         @relation("VendorCreatedBy")
-  updatedVendors         Vendor[]         @relation("VendorUpdatedBy")
-  createdJobApplications JobApplication[] @relation("JobApplicationCreatedBy")
-  updatedJobApplications JobApplication[] @relation("JobApplicationUpdatedBy")
-  createdCompanyUsers    CompanyUser[]    @relation("CompanyUserCreatedBy")
-  updatedCompanyUsers    CompanyUser[]    @relation("CompanyUserUpdatedBy")
-  createdVendorUsers     VendorUser[]     @relation("VendorUserCreatedBy")
-  updatedVendorUsers     VendorUser[]     @relation("VendorUserUpdatedBy")
-  createdCompanyRoles    CompanyRole[]    @relation("CompanyRoleCreatedBy")
-  updatedCompanyRoles    CompanyRole[]    @relation("CompanyRoleUpdatedBy")
-  createdVendorRoles     VendorRole[]     @relation("VendorRoleCreatedBy")
-  updatedVendorRoles     VendorRole[]     @relation("VendorRoleUpdatedBy")
+  // Audit relationships - Created/Updated by this user (within same database)
+  createdSystemRoles SystemRole[] @relation("SystemRoleCreatedBy")
+  updatedSystemRoles SystemRole[] @relation("SystemRoleUpdatedBy")
 
   @@unique([tenantId, email])
   @@index([email])
@@ -93,6 +89,9 @@ model User {
   @@map("users")
 }
 
+// ============================================================================
+// SYSTEM ROLE & PERMISSIONS
+// ============================================================================
 model SystemRole {
   id          String  @id @default(cuid())
   name        String  @unique
@@ -158,6 +157,9 @@ model SystemRolePermission {
   @@map("system_role_permissions")
 }
 
+// ============================================================================
+// SKILLS CATALOG
+// ============================================================================
 model Skill {
   id          String  @id @default(cuid())
   name        String  @unique
@@ -168,9 +170,8 @@ model Skill {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  // Relationships
+  // Relationships (within same database)
   userSkills UserSkill[]
-  jobSkills  JobSkill[]
 
   @@index([name])
   @@map("skills")
@@ -180,7 +181,7 @@ model UserSkill {
   id          String  @id @default(cuid())
   userId      String
   skillId     String
-  proficiency String? // e.g., "Beginner", "Intermediate", "Advanced", "Expert"
+  proficiency String?
 
   // Timestamps
   createdAt DateTime @default(now())
@@ -196,6 +197,9 @@ model UserSkill {
   @@map("user_skills")
 }
 
+// ============================================================================
+// USER PROFILE DATA
+// ============================================================================
 model Experience {
   id     String @id @default(cuid())
   userId String
@@ -262,7 +266,7 @@ model Resume {
   // File Details
   fileName  String
   fileUrl   String
-  fileSize  Int? // in bytes
+  fileSize  Int?
   mimeType  String?
   isPrimary Boolean @default(false)
 
@@ -277,4 +281,3 @@ model Resume {
   @@index([deletedAt])
   @@map("resumes")
 }
-

@@ -1,0 +1,86 @@
+// Audit & Compliance Database Schema
+// Domain: Audit & Compliance
+// Database: audit_db
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "../../../libs/backend/database/src/clients/generated/audit"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("AUDIT_DATABASE_URL")
+}
+
+// Shared Enums
+enum AuditAction {
+  CREATE
+  UPDATE
+  DELETE
+  VIEW
+  APPROVE
+  REJECT
+  PUBLISH
+  ARCHIVE
+}
+
+// ============================================================================
+// AUDIT LOG
+// ============================================================================
+model AuditLog {
+  id       String  @id @default(cuid())
+  tenantId String? // Reference to Tenant.id in tenant_db
+
+  // Entity Information
+  entityType String
+  entityId   String
+
+  // Action Details
+  action   AuditAction
+  changes  Json?
+  metadata Json?
+
+  // User Tracking (references to User.id in identity_db)
+  userId    String? // Reference to User.id
+  userEmail String? // Denormalized from User.email for quick lookup
+  ipAddress String?
+  userAgent String?
+
+  // Timestamps
+  createdAt DateTime @default(now())
+
+  @@index([entityType, entityId])
+  @@index([tenantId, createdAt])
+  @@index([userId, createdAt])
+  @@index([action, createdAt])
+  @@index([createdAt])
+  @@map("audit_logs")
+}
+
+// ============================================================================
+// VERSION HISTORY
+// ============================================================================
+model VersionHistory {
+  id         String @id @default(cuid())
+  entityType String
+  entityId   String
+
+  // Version Information
+  version    Int
+  changes    Json
+  changeType String
+
+  // Tracking (references to User.id in identity_db)
+  changedBy    String? // Reference to User.id
+  changedByEmail String? // Denormalized from User.email
+  changeReason String? @db.Text
+
+  // Timestamps
+  createdAt DateTime @default(now())
+
+  @@unique([entityType, entityId, version])
+  @@index([entityType, entityId])
+  @@index([entityType, entityId, version])
+  @@index([changedBy, createdAt])
+  @@map("version_history")
+}

@@ -1,0 +1,120 @@
+version: '3.8'
+
+services:
+  # ============================================================================
+  # REDIS - Main Cache/Queue
+  # ============================================================================
+  redis:
+    image: redis:7-alpine
+    container_name: redis
+    volumes:
+      - redis-data:/data
+    ports:
+      - ${REDIS_PORT:-6379}:6379
+    deploy:
+      replicas: 1
+      placement:
+        constraints:
+          - node.role == manager
+      restart_policy:
+        condition: on-failure
+        delay: 5s
+        max_attempts: 3
+        window: 120s
+      resources:
+        limits:
+          memory: 4G
+        reservations:
+          memory: 2G
+      update_config:
+        parallelism: 1
+        order: start-first
+        delay: 10s
+        failure_action: rollback
+        monitor: 60s
+        max_failure_ratio: 0
+      rollback_config:
+        parallelism: 1
+        order: stop-first
+        delay: 10s
+    networks:
+      - hirenova-network
+      - agent_network
+    healthcheck:
+      test: [CMD, redis-cli, --no-auth-warning, -a, "${REDIS_PASSWORD:-redis123}", ping]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    command: >
+      redis-server
+      --appendonly yes
+      --requirepass ${REDIS_PASSWORD:-redis123}
+      --timeout 300
+      --tcp-keepalive 60
+      --tcp-backlog 511
+      --maxmemory 3600mb
+      --maxmemory-policy noeviction
+      --save 900 1
+      --save 300 10
+      --save 60 10000
+      --stop-writes-on-bgsave-error no
+      --rdbcompression yes
+      --rdbchecksum yes
+
+  # ============================================================================
+  # RABBITMQ - Message Queue
+  # ============================================================================
+  rabbitmq:
+    image: rabbitmq:3-management-alpine
+    env_file: ../../.env.docker
+    volumes:
+      - rabbitmq-data:/var/lib/rabbitmq
+      - ./config/rabbitmq/rabbitmq.conf:/etc/rabbitmq/rabbitmq.conf
+      - ./config/rabbitmq/enabled_plugins:/etc/rabbitmq/enabled_plugins
+    ports:
+      - ${RABBITMQ_MANAGEMENT_PORT:-15672}:15672
+      - ${RABBITMQ_SERVICE_PORT:-5672}:5672
+    deploy:
+      replicas: 1
+      placement:
+        constraints:
+          - node.role == manager
+      restart_policy:
+        condition: on-failure
+      resources:
+        limits:
+          memory: 1.5G
+        reservations:
+          memory: 768M
+      update_config:
+        parallelism: 1
+        order: start-first
+        delay: 10s
+        failure_action: rollback
+        monitor: 60s
+        max_failure_ratio: 0
+      rollback_config:
+        parallelism: 1
+        order: stop-first
+        delay: 10s
+    networks:
+      - hirenova-network
+      - agent_network
+    healthcheck:
+      test: [CMD, rabbitmq-diagnostics, ping]
+      interval: 60s
+      timeout: 30s
+      retries: 5
+      start_period: 120s
+
+networks:
+  hirenova-network:
+    driver: overlay
+    attachable: true
+  agent_network:
+    external: true
+
+volumes:
+  redis-data:
+  rabbitmq-data:

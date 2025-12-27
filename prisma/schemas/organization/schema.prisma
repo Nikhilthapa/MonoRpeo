@@ -1,0 +1,340 @@
+// Organization Database Schema
+// Domain: Organizational Structure
+// Database: organization_db
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "../../../libs/backend/database/src/clients/generated/organization"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("ORGANIZATION_DATABASE_URL")
+}
+
+// Shared Enums
+enum PermissionScope {
+  SYSTEM
+  COMPANY
+  VENDOR
+}
+
+// ============================================================================
+// COMPANY MODELS
+// ============================================================================
+model Company {
+  id       String  @id @default(cuid())
+  tenantId String? // Reference to Tenant.id in tenant_db
+  name     String
+  email    String  @unique
+  phone    String?
+  website  String?
+  logoUrl  String?
+
+  // Company details
+  description String? @db.Text
+  address     String? @db.Text
+  country     String?
+  state       String?
+  city        String?
+  industry    String?
+  companySize String?
+  workModel   String?
+  gstin       String?
+  linkedInUrl String?
+
+  // ERP Enhancements
+  metadata Json?
+  version  Int   @default(1)
+
+  // Status
+  isVerified Boolean @default(false)
+  isActive   Boolean @default(true)
+
+  // Timestamps
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+  deletedAt  DateTime?
+  archivedAt DateTime?
+
+  // Audit Fields (references to User.id in identity_db)
+  createdBy String? // Reference to User.id
+  updatedBy String? // Reference to User.id
+
+  // Relationships (within organization database)
+  companyUsers CompanyUser[]
+  companyRoles CompanyRole[]
+
+  @@unique([tenantId, email])
+  @@index([email])
+  @@index([tenantId, isActive, deletedAt])
+  @@index([deletedAt])
+  @@index([archivedAt])
+  @@map("companies")
+}
+
+model CompanyUser {
+  id        String @id @default(cuid())
+  userId    String // Reference to User.id in identity_db
+  companyId String
+  roleId    String
+
+  // Denormalized user data for quick access
+  userEmail String? // Denormalized from User.email
+  userName  String? // Denormalized from User.firstName + lastName
+
+  // ERP Enhancements
+  metadata Json?
+  version  Int   @default(1)
+
+  // Status
+  isActive Boolean @default(true)
+
+  // Timestamps
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+  deletedAt  DateTime?
+  archivedAt DateTime?
+
+  // Audit Fields
+  createdBy String? // Reference to User.id
+  updatedBy String? // Reference to User.id
+
+  // Relationships (within organization database)
+  company Company     @relation(fields: [companyId], references: [id])
+  role    CompanyRole @relation(fields: [roleId], references: [id])
+
+  @@unique([userId, companyId])
+  @@index([userId, companyId])
+  @@index([companyId, isActive, deletedAt])
+  @@index([roleId])
+  @@index([deletedAt])
+  @@index([archivedAt])
+  @@map("company_users")
+}
+
+model CompanyRole {
+  id          String  @id @default(cuid())
+  companyId   String
+  name        String
+  description String? @db.Text
+
+  // ERP Enhancements
+  metadata Json?
+  version  Int   @default(1)
+
+  // Timestamps
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+  deletedAt DateTime?
+  archivedAt DateTime?
+
+  // Audit Fields
+  createdBy String? // Reference to User.id
+  updatedBy String? // Reference to User.id
+
+  // Relationships
+  company     Company                 @relation(fields: [companyId], references: [id])
+  users       CompanyUser[]
+  permissions CompanyRolePermission[]
+
+  @@unique([companyId, name])
+  @@index([companyId, deletedAt])
+  @@index([deletedAt])
+  @@index([archivedAt])
+  @@map("company_roles")
+}
+
+model CompanyPermission {
+  id          String          @id @default(cuid())
+  name        String          @unique
+  description String?         @db.Text
+  scope       PermissionScope @default(COMPANY)
+
+  // Timestamps
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relationships
+  companyRolePermissions CompanyRolePermission[]
+
+  @@map("company_permissions")
+}
+
+model CompanyRolePermission {
+  id           String @id @default(cuid())
+  roleId       String
+  permissionId String
+
+  // Timestamps
+  createdAt DateTime @default(now())
+
+  // Relationships
+  role       CompanyRole       @relation(fields: [roleId], references: [id], onDelete: Cascade)
+  permission CompanyPermission @relation(fields: [permissionId], references: [id], onDelete: Cascade)
+
+  @@unique([roleId, permissionId])
+  @@index([roleId])
+  @@index([permissionId])
+  @@map("company_role_permissions")
+}
+
+// ============================================================================
+// VENDOR MODELS
+// ============================================================================
+model Vendor {
+  id       String  @id @default(cuid())
+  tenantId String? // Reference to Tenant.id in tenant_db
+  name     String
+  email    String  @unique
+  phone    String?
+  website  String?
+  logoUrl  String?
+
+  // Vendor details
+  description String? @db.Text
+  address     String? @db.Text
+  country     String?
+  state       String?
+  city        String?
+  industry    String?
+  vendorSize  String?
+  workModel   String?
+  gstin       String?
+  linkedInUrl String?
+
+  // ERP Enhancements
+  metadata Json?
+  version  Int   @default(1)
+
+  // Status
+  isVerified Boolean @default(false)
+  isActive   Boolean @default(true)
+
+  // Timestamps
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+  deletedAt  DateTime?
+  archivedAt DateTime?
+
+  // Audit Fields
+  createdBy String? // Reference to User.id
+  updatedBy String? // Reference to User.id
+
+  // Relationships
+  vendorUsers VendorUser[]
+  vendorRoles VendorRole[]
+
+  @@unique([tenantId, email])
+  @@index([email])
+  @@index([tenantId, isActive, deletedAt])
+  @@index([deletedAt])
+  @@index([archivedAt])
+  @@map("vendors")
+}
+
+model VendorUser {
+  id       String @id @default(cuid())
+  userId   String // Reference to User.id in identity_db
+  vendorId String
+  roleId   String
+
+  // Denormalized user data
+  userEmail String?
+  userName  String?
+
+  // ERP Enhancements
+  metadata Json?
+  version  Int   @default(1)
+
+  // Status
+  isActive Boolean @default(true)
+
+  // Timestamps
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+  deletedAt DateTime?
+  archivedAt DateTime?
+
+  // Audit Fields
+  createdBy String? // Reference to User.id
+  updatedBy String? // Reference to User.id
+
+  // Relationships
+  vendor Vendor     @relation(fields: [vendorId], references: [id])
+  role   VendorRole @relation(fields: [roleId], references: [id])
+
+  @@unique([userId, vendorId])
+  @@index([userId, vendorId])
+  @@index([vendorId, isActive, deletedAt])
+  @@index([roleId])
+  @@index([deletedAt])
+  @@index([archivedAt])
+  @@map("vendor_users")
+}
+
+model VendorRole {
+  id          String  @id @default(cuid())
+  vendorId    String
+  name        String
+  description String? @db.Text
+
+  // ERP Enhancements
+  metadata Json?
+  version  Int   @default(1)
+
+  // Timestamps
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+  deletedAt DateTime?
+  archivedAt DateTime?
+
+  // Audit Fields
+  createdBy String? // Reference to User.id
+  updatedBy String? // Reference to User.id
+
+  // Relationships
+  vendor      Vendor                 @relation(fields: [vendorId], references: [id])
+  users       VendorUser[]
+  permissions VendorRolePermission[]
+
+  @@unique([vendorId, name])
+  @@index([vendorId, deletedAt])
+  @@index([deletedAt])
+  @@index([archivedAt])
+  @@map("vendor_roles")
+}
+
+model VendorPermission {
+  id          String          @id @default(cuid())
+  name        String          @unique
+  description String?         @db.Text
+  scope       PermissionScope @default(VENDOR)
+
+  // Timestamps
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relationships
+  vendorRolePermissions VendorRolePermission[]
+
+  @@map("vendor_permissions")
+}
+
+model VendorRolePermission {
+  id           String @id @default(cuid())
+  roleId       String
+  permissionId String
+
+  // Timestamps
+  createdAt DateTime @default(now())
+
+  // Relationships
+  role       VendorRole       @relation(fields: [roleId], references: [id], onDelete: Cascade)
+  permission VendorPermission @relation(fields: [permissionId], references: [id], onDelete: Cascade)
+
+  @@unique([roleId, permissionId])
+  @@index([roleId])
+  @@index([permissionId])
+  @@map("vendor_role_permissions")
+}

@@ -1,0 +1,370 @@
+version: '3.8'
+
+services:
+  # ============================================================================
+  # API GATEWAY
+  # ============================================================================
+  api-gateway:
+    image: placio33/hirenova:latest
+    command: sh -c "node $${APP_PATH}"
+    deploy:
+      replicas: 1
+      restart_policy:
+        condition: on-failure
+      placement:
+        constraints:
+          - node.role == manager
+      update_config:
+        parallelism: 1
+        order: start-first
+        delay: 10s
+        failure_action: rollback
+        monitor: 60s
+        max_failure_ratio: 0
+      rollback_config:
+        parallelism: 1
+        order: stop-first
+        delay: 10s
+    ports:
+      - ${API_GATEWAY_PORT:-3031}:${API_GATEWAY_INTERNAL_PORT:-3031}
+    networks:
+      - hirenova-network
+      - agent_network
+    volumes:
+      - shared-storage:/shared
+    environment:
+      - NODE_ENV=production
+      - APP_PATH=dist/apps/api-gateway/main.js
+      - BULK_EMAIL_SERVICE_URL=http://bulk-email-service:${BULK_EMAIL_SERVICE_INTERNAL_PORT:-3045}
+    env_file: ../../.env.docker
+
+  # ============================================================================
+  # BACKEND SERVICES
+  # ============================================================================
+
+  # --- Auth Service ---
+  auth-service:
+    image: placio33/hirenova:latest
+    command: sh -c "node $${APP_PATH}"
+    deploy:
+      replicas: 1
+      restart_policy:
+        condition: on-failure
+      placement:
+        constraints:
+          - node.role == manager
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 512M
+        reservations:
+          cpus: '0.5'
+          memory: 256M
+      update_config:
+        parallelism: 1
+        order: start-first
+        delay: 10s
+        failure_action: rollback
+        monitor: 60s
+        max_failure_ratio: 0
+      rollback_config:
+        parallelism: 1
+        order: stop-first
+        delay: 10s
+    ports:
+      - ${AUTH_SERVICE_PORT:-3001}:${AUTH_SERVICE_INTERNAL_PORT:-3001}
+    networks:
+      - hirenova-network
+      - agent_network
+    volumes:
+      - shared-storage:/shared
+    environment:
+      - NODE_ENV=production
+      - APP_PATH=dist/apps/backend/auth-service/main.js
+      - PORT=${AUTH_SERVICE_INTERNAL_PORT:-3001}
+      - DATABASE_URL=${IDENTITY_DATABASE_URL}
+      - IDENTITY_DATABASE_URL=${IDENTITY_DATABASE_URL}
+    env_file: ../../.env.docker
+
+  # --- Company Service ---
+  company-service:
+    image: placio33/hirenova:latest
+    command: sh -c "node $${APP_PATH}"
+    deploy:
+      replicas: 1
+      restart_policy:
+        condition: on-failure
+      placement:
+        constraints:
+          - node.role == manager
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 512M
+        reservations:
+          cpus: '0.5'
+          memory: 256M
+      update_config:
+        parallelism: 1
+        order: start-first
+        delay: 10s
+        failure_action: rollback
+        monitor: 60s
+        max_failure_ratio: 0
+      rollback_config:
+        parallelism: 1
+        order: stop-first
+        delay: 10s
+    ports:
+      - ${COMPANY_SERVICE_PORT:-3002}:${COMPANY_SERVICE_INTERNAL_PORT:-3002}
+    networks:
+      - hirenova-network
+      - agent_network
+    volumes:
+      - shared-storage:/shared
+    environment:
+      - NODE_ENV=production
+      - APP_PATH=dist/apps/backend/company-service/main.js
+      - PORT=${COMPANY_SERVICE_INTERNAL_PORT:-3002}
+      - DATABASE_URL=${ORGANIZATION_DATABASE_URL}
+      - ORGANIZATION_DATABASE_URL=${ORGANIZATION_DATABASE_URL}
+    env_file: ../../.env.docker
+
+  # --- Job Service ---
+  job-service:
+    image: placio33/hirenova:latest
+    command: sh -c "node $${APP_PATH}"
+    deploy:
+      replicas: 1
+      restart_policy:
+        condition: on-failure
+      placement:
+        constraints:
+          - node.role == manager
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 1G
+        reservations:
+          cpus: '0.5'
+          memory: 512M
+      update_config:
+        parallelism: 1
+        order: start-first
+        delay: 10s
+        failure_action: rollback
+        monitor: 60s
+        max_failure_ratio: 0
+      rollback_config:
+        parallelism: 1
+        order: stop-first
+        delay: 10s
+    ports:
+      - ${JOB_SERVICE_PORT:-3003}:${JOB_SERVICE_INTERNAL_PORT:-3003}
+    networks:
+      - hirenova-network
+      - agent_network
+    volumes:
+      - shared-storage:/shared
+    environment:
+      - NODE_ENV=production
+      - APP_PATH=dist/apps/backend/job-service/main.js
+      - PORT=${JOB_SERVICE_INTERNAL_PORT:-3003}
+      - DATABASE_URL=${JOB_DATABASE_URL}
+      - JOB_DATABASE_URL=${JOB_DATABASE_URL}
+    env_file: ../../.env.docker
+
+  # --- Tenant Service ---
+  tenant-service:
+    image: placio33/hirenova:latest
+    command: sh -c "node $${APP_PATH}"
+    deploy:
+      replicas: 1
+      restart_policy:
+        condition: on-failure
+      placement:
+        constraints:
+          - node.role == manager
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 512M
+        reservations:
+          cpus: '0.5'
+          memory: 256M
+      update_config:
+        parallelism: 1
+        order: start-first
+        delay: 10s
+        failure_action: rollback
+        monitor: 60s
+        max_failure_ratio: 0
+      rollback_config:
+        parallelism: 1
+        order: stop-first
+        delay: 10s
+    ports:
+      - ${TENANT_SERVICE_PORT:-3004}:${TENANT_SERVICE_INTERNAL_PORT:-3004}
+    networks:
+      - hirenova-network
+      - agent_network
+    volumes:
+      - shared-storage:/shared
+    environment:
+      - NODE_ENV=production
+      - APP_PATH=dist/apps/backend/tenant-service/main.js
+      - PORT=${TENANT_SERVICE_INTERNAL_PORT:-3004}
+      - DATABASE_URL=${TENANT_DATABASE_URL}
+      - TENANT_DATABASE_URL=${TENANT_DATABASE_URL}
+    env_file: ../../.env.docker
+
+  # --- Audit Service ---
+  audit-service:
+    image: placio33/hirenova:latest
+    command: sh -c "node $${APP_PATH}"
+    deploy:
+      replicas: 1
+      restart_policy:
+        condition: on-failure
+      placement:
+        constraints:
+          - node.role == manager
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 512M
+        reservations:
+          cpus: '0.5'
+          memory: 256M
+      update_config:
+        parallelism: 1
+        order: start-first
+        delay: 10s
+        failure_action: rollback
+        monitor: 60s
+        max_failure_ratio: 0
+      rollback_config:
+        parallelism: 1
+        order: stop-first
+        delay: 10s
+    ports:
+      - ${AUDIT_SERVICE_PORT:-3005}:${AUDIT_SERVICE_INTERNAL_PORT:-3005}
+    networks:
+      - hirenova-network
+      - agent_network
+    volumes:
+      - shared-storage:/shared
+    environment:
+      - NODE_ENV=production
+      - APP_PATH=dist/apps/backend/audit-service/main.js
+      - PORT=${AUDIT_SERVICE_INTERNAL_PORT:-3005}
+      - DATABASE_URL=${AUDIT_DATABASE_URL}
+      - AUDIT_DATABASE_URL=${AUDIT_DATABASE_URL}
+    env_file: ../../.env.docker
+
+  # --- Notification Service ---
+  notification-service:
+    image: placio33/hirenova:latest
+    command: sh -c "node $${APP_PATH}"
+    deploy:
+      replicas: 1
+      restart_policy:
+        condition: on-failure
+      placement:
+        constraints:
+          - node.role == manager
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 512M
+        reservations:
+          cpus: '0.25'
+          memory: 256M
+      update_config:
+        parallelism: 1
+        order: start-first
+        delay: 10s
+        failure_action: rollback
+        monitor: 60s
+        max_failure_ratio: 0
+      rollback_config:
+        parallelism: 1
+        order: stop-first
+        delay: 10s
+    ports:
+      - ${NOTIFICATION_SERVICE_PORT:-3038}:${NOTIFICATION_SERVICE_INTERNAL_PORT:-3038}
+    networks:
+      - hirenova-network
+      - agent_network
+    volumes:
+      - shared-storage:/shared
+    environment:
+      - NODE_ENV=production
+      - APP_PATH=dist/apps/backend/notification-service/main.js
+      - PORT=${NOTIFICATION_SERVICE_INTERNAL_PORT:-3038}
+      - RABBITMQ_URL=${RABBITMQ_URL}
+    env_file: ../../.env.docker
+
+  # --- Search Service ---
+  search-service:
+    image: placio33/hirenova:latest
+    command: sh -c "node $${APP_PATH}"
+    deploy:
+      replicas: 1
+      restart_policy:
+        condition: on-failure
+      placement:
+        constraints:
+          - node.role == manager
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 512M
+        reservations:
+          cpus: '0.5'
+          memory: 256M
+      update_config:
+        parallelism: 1
+        order: start-first
+        delay: 10s
+        failure_action: rollback
+        monitor: 60s
+        max_failure_ratio: 0
+      rollback_config:
+        parallelism: 1
+        order: stop-first
+        delay: 10s
+    ports:
+      - ${SEARCH_SERVICE_PORT:-3006}:${SEARCH_SERVICE_INTERNAL_PORT:-3006}
+    networks:
+      - hirenova-network
+      - agent_network
+    volumes:
+      - shared-storage:/shared
+    environment:
+      - NODE_ENV=production
+      - APP_PATH=dist/apps/backend/search-service/main.js
+      - PORT=${SEARCH_SERVICE_INTERNAL_PORT:-3006}
+      - REDIS_URL=${REDIS_URL}
+    env_file: ../../.env.docker
+
+# ============================================================================
+# VOLUMES
+# ============================================================================
+volumes:
+  shared-storage:
+    driver: local
+    driver_opts:
+      type: nfs4
+      o: addr=${NFS_MANAGER_IP:-},rw,noatime,rsize=8192,wsize=8192,tcp,timeo=14
+      device: ":${SHARED_STORAGE_PATH:-/var/lib/hirenova/shared-storage}"
+
+# ============================================================================
+# NETWORKS
+# ============================================================================
+networks:
+  hirenova-network:
+    driver: overlay
+    attachable: true
+  agent_network:
+    external: true

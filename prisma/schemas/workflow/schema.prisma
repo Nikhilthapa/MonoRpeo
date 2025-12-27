@@ -1,23 +1,46 @@
-// ERP WORKFLOW SYSTEM - Approval Workflows
+// Workflow Database Schema
+// Domain: Process Management
+// Database: workflow_db
 
+generator client {
+  provider = "prisma-client-js"
+  output   = "../../../libs/backend/database/src/clients/generated/workflow"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("WORKFLOW_DATABASE_URL")
+}
+
+// Shared Enums
+enum WorkflowStatus {
+  PENDING
+  IN_PROGRESS
+  APPROVED
+  REJECTED
+  CANCELLED
+}
+
+// ============================================================================
+// WORKFLOW MODELS
+// ============================================================================
 model Workflow {
   id          String  @id @default(cuid())
-  tenantId    String?
+  tenantId    String? // Reference to Tenant.id in tenant_db
   name        String
   description String? @db.Text
-  entityType  String // e.g., "Job", "Company", "User"
+  entityType  String
 
   // Workflow Configuration
   isActive  Boolean @default(true)
-  isDefault Boolean @default(false) // Default workflow for entity type
+  isDefault Boolean @default(false)
 
   // Timestamps
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt
   deletedAt DateTime?
 
-  // Relationships
-  tenant    Tenant?            @relation(fields: [tenantId], references: [id], onDelete: SetNull)
+  // Relationships (within workflow database)
   steps     WorkflowStep[]
   instances WorkflowInstance[]
 
@@ -30,12 +53,12 @@ model Workflow {
 model WorkflowStep {
   id          String  @id @default(cuid())
   workflowId  String
-  stepOrder   Int // Order of step in workflow
+  stepOrder   Int
   name        String
   description String? @db.Text
 
   // Step Configuration
-  approverRoleId String? // Role required to approve this step
+  approverRoleId String?
   isRequired     Boolean @default(true)
   canSkip        Boolean @default(false)
 
@@ -55,27 +78,27 @@ model WorkflowStep {
 model WorkflowInstance {
   id         String @id @default(cuid())
   workflowId String
-  entityType String // e.g., "Job", "Company"
-  entityId   String // ID of the entity in workflow
+  entityType String
+  entityId   String
 
   // Current State
   currentStepId String?
   status        WorkflowStatus @default(PENDING)
 
-  // Tracking
-  startedBy   String?
-  completedBy String?
+  // Tracking (references to User.id in identity_db)
+  startedBy   String? // Reference to User.id
+  completedBy String? // Reference to User.id
+  startedByEmail String? // Denormalized from User.email
+  completedByEmail String? // Denormalized from User.email
   completedAt DateTime?
 
   // Timestamps
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  // Relationships
+  // Relationships (within workflow database)
   workflow    Workflow      @relation(fields: [workflowId], references: [id])
   currentStep WorkflowStep? @relation(fields: [currentStepId], references: [id], onDelete: SetNull)
-  starter     User?         @relation("WorkflowStartedBy", fields: [startedBy], references: [id], onDelete: SetNull)
-  completer   User?         @relation("WorkflowCompletedBy", fields: [completedBy], references: [id], onDelete: SetNull)
 
   @@unique([entityType, entityId])
   @@index([workflowId, status])
@@ -83,4 +106,3 @@ model WorkflowInstance {
   @@index([status, createdAt])
   @@map("workflow_instances")
 }
-

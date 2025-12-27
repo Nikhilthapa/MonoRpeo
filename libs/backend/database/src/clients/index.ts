@@ -1,25 +1,13 @@
-import "dotenv/config";
-import { PrismaPg } from '@prisma/adapter-pg'
-import { PrismaClient, Prisma } from './generated/client'
+// Domain-based Prisma Clients
+// Each domain has its own database and Prisma client
 
-const connectionString = `${process.env.DATABASE_URL}`
+export * from './identity-client';
+export * from './tenant-client';
+export * from './organization-client';
+export * from './job-client';
+export * from './audit-client';
+export * from './workflow-client';
 
-const adapter = new PrismaPg({ connectionString })
-
-const globalForPrisma = globalThis as unknown as {
-  prisma: PrismaClient | undefined;
-};
-
-export const prisma =
-  globalForPrisma.prisma ??
-  new PrismaClient({
-    adapter,
-    log: process.env.NODE_ENV === 'development' ? ['query', 'error', 'warn'] : ['error'],
-  });
-
-if (process.env.NODE_ENV !== 'production') globalForPrisma.prisma = prisma;
-
-export type PrismaClientType = PrismaClient;
-export { PrismaClient, Prisma };
-export * from './generated/client';
-
+// Legacy exports for backward compatibility
+export { identityPrisma as prisma } from './identity-client';
+export type { IdentityPrismaClient as PrismaClientType } from './identity-client';

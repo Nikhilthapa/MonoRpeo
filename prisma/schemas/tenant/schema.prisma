@@ -1,0 +1,128 @@
+// Tenant & Configuration Database Schema
+// Domain: Multi-Tenancy & Configuration
+// Database: tenant_db
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "../../../libs/backend/database/src/clients/generated/tenant"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("TENANT_DATABASE_URL")
+}
+
+// Shared Enums
+enum CustomFieldType {
+  TEXT
+  NUMBER
+  DATE
+  BOOLEAN
+  SELECT
+  MULTI_SELECT
+  JSON
+}
+
+// ============================================================================
+// TENANT MODEL
+// ============================================================================
+model Tenant {
+  id      String  @id @default(cuid())
+  name    String
+  slug    String  @unique
+  email   String  @unique
+  phone   String?
+  website String?
+  logoUrl String?
+
+  // Subscription & Billing
+  subscriptionPlan      String?
+  subscriptionStatus    String?
+  subscriptionStartDate DateTime?
+  subscriptionEndDate   DateTime?
+  maxUsers              Int?      @default(10)
+  maxJobs               Int?      @default(100)
+
+  // Settings
+  settings Json?
+  features Json?
+
+  // Status
+  isActive   Boolean @default(true)
+  isVerified Boolean @default(false)
+
+  // Timestamps
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+
+  // Relationships (within tenant database)
+  customFields CustomField[]
+
+  @@index([slug])
+  @@index([email])
+  @@index([isActive, deletedAt])
+  @@map("tenants")
+}
+
+// ============================================================================
+// CUSTOM FIELDS
+// ============================================================================
+model CustomField {
+  id         String          @id @default(cuid())
+  tenantId   String?
+  entityType String
+  name       String
+  label      String
+  fieldType  CustomFieldType
+
+  // Field Configuration
+  isRequired      Boolean @default(false)
+  defaultValue    String?
+  validationRules Json?
+  options         Json?
+
+  // Display
+  displayOrder Int     @default(0)
+  isVisible    Boolean @default(true)
+
+  // Timestamps
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+
+  // Relationships
+  tenant Tenant?            @relation(fields: [tenantId], references: [id], onDelete: SetNull)
+  values CustomFieldValue[]
+
+  @@unique([tenantId, entityType, name])
+  @@index([tenantId, entityType, isVisible])
+  @@index([entityType, deletedAt])
+  @@map("custom_fields")
+}
+
+model CustomFieldValue {
+  id            String @id @default(cuid())
+  customFieldId String
+  entityType    String
+  entityId      String
+
+  // Value Storage
+  textValue    String?   @db.Text
+  numberValue  Decimal?  @db.Decimal(20, 6)
+  dateValue    DateTime?
+  booleanValue Boolean?
+  jsonValue    Json?
+
+  // Timestamps
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relationships
+  customField CustomField @relation(fields: [customFieldId], references: [id], onDelete: Cascade)
+
+  @@unique([customFieldId, entityType, entityId])
+  @@index([entityType, entityId])
+  @@index([customFieldId])
+  @@map("custom_field_values")
+}

@@ -1,0 +1,63 @@
+server:
+  http_listen_port: 9080
+  grpc_listen_port: 0
+
+positions:
+  filename: /tmp/positions.yaml
+
+clients:
+  - url: http://logging_loki:3100/loki/api/v1/push
+
+scrape_configs:
+  - job_name: docker
+    docker_sd_configs:
+      - host: unix:///var/run/docker.sock
+        refresh_interval: 5s
+        filters:
+          - name: status
+            values: ["running"]
+    relabel_configs:
+      # Extract container name
+      - source_labels: ['__meta_docker_container_name']
+        regex: '/(.*)'
+        target_label: 'container'
+      
+      # Extract log stream (stdout/stderr)
+      - source_labels: ['__meta_docker_container_log_stream']
+        target_label: 'stream'
+      
+      # Extract Docker Swarm service name
+      - source_labels: ['__meta_docker_container_label_com_docker_swarm_service_name']
+        target_label: 'service'
+        regex: '(.+)'
+      
+      # Extract Docker Swarm task name
+      - source_labels: ['__meta_docker_container_label_com_docker_swarm_task_name']
+        target_label: 'task'
+      
+      # Extract Docker Swarm node ID
+      - source_labels: ['__meta_docker_container_label_com_docker_swarm_node_id']
+        target_label: 'node_id'
+      
+      # Extract hostname
+      - source_labels: ['HOSTNAME']
+        target_label: 'hostname'
+      
+      # Extract container ID
+      - source_labels: ['__meta_docker_container_id']
+        regex: '(.{12}).*'
+        target_label: 'container_id'
+      
+      # Extract image name
+      - source_labels: ['__meta_docker_container_label_com_docker_compose_service']
+        target_label: 'compose_service'
+      
+      # Set job label
+      - target_label: 'job'
+        replacement: 'docker'
+      
+      # Keep only containers that are part of a Swarm service
+      - source_labels: ['__meta_docker_container_label_com_docker_swarm_service_name']
+        regex: '.+'
+        action: keep
+

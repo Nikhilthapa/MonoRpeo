@@ -1,0 +1,45 @@
+global:
+  resolve_timeout: 5m
+
+# The root route
+route:
+  group_by: ['alertname', 'cluster', 'service']
+  group_wait: 10s
+  group_interval: 10s
+  repeat_interval: 12h
+  receiver: 'default'
+  routes:
+    - match:
+        severity: critical
+      receiver: 'critical-alerts'
+      continue: true
+    - match:
+        severity: warning
+      receiver: 'warning-alerts'
+
+receivers:
+  - name: 'default'
+    # Add your notification channels here
+    # Example: webhook, email, slack, etc.
+    # webhook_configs:
+    #   - url: 'http://your-webhook-url'
+    #     send_resolved: true
+    
+  - name: 'critical-alerts'
+    # Configure critical alert notifications
+    # webhook_configs:
+    #   - url: 'http://your-webhook-url/critical'
+    #     send_resolved: true
+    # email_configs:
+    #   - to: 'alerts@example.com'
+    #     from: 'alertmanager@example.com'
+    #     smarthost: 'smtp.example.com:587'
+    #     auth_username: 'user'
+    #     auth_password: 'pass'
+    
+  - name: 'warning-alerts'
+    # Configure warning alert notifications
+    # webhook_configs:
+    #   - url: 'http://your-webhook-url/warning'
+    #     send_resolved: true
+

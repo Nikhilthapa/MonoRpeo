@@ -1,0 +1,47 @@
+# Git files
+.git
+.gitignore
+
+# Node.js dependencies
+node_modules
+npm-debug.log
+yarn-debug.log
+yarn-error.log
+
+# Environment variables
+.env
+.env.*
+
+# Only include the specific .env.docker files
+!build/env/*.env.docker
+
+# Development files
+**/*.md
+.editorconfig
+.eslintrc
+.prettierrc
+.nx
+
+# Build files (exclude anything that's not needed)
+coverage
+tmp
+**/test
+**/*.test.js
+**/*.spec.js
+
+# Docker files
+Dockerfile*
+docker-compose*
+.dockerignore
+
+# System files
+.DS_Store
+Thumbs.db
+
+# Python virtual environments
+**/.venv
+**/__pycache__
+**/*.pyc
+
+# NX cache
+.nx/cache

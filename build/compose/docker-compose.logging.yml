@@ -1,0 +1,234 @@
+version: '3.8'
+
+services:
+  # --- Promtail (Log Collector) ---
+  # Runs on every node in global mode to collect logs from all containers
+  promtail:
+    image: grafana/promtail:latest
+    deploy:
+      mode: global  # Run on every node to collect local logs
+      restart_policy:
+        condition: on-failure
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 256M
+        reservations:
+          cpus: '0.25'
+          memory: 128M
+    volumes:
+      - /var/lib/docker/containers:/var/lib/docker/containers:ro
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - ./promtail-config.yml:/etc/promtail/config.yml:ro
+    command: -config.file=/etc/promtail/config.yml
+    networks:
+      - hirenova-network
+      - agent_network
+    environment:
+      - HOSTNAME={{.Node.Hostname}}
+
+  # --- Loki (Log Aggregation) ---
+  # Central log storage and query engine
+  loki:
+    image: grafana/loki:latest
+    deploy:
+      replicas: 1
+      restart_policy:
+        condition: on-failure
+      placement:
+        constraints:
+          - node.role == manager
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 2G
+        reservations:
+          cpus: '1.0'
+          memory: 1G
+    ports:
+      - ${LOKI_PORT:-3100}:3100
+    volumes:
+      - loki-data:/loki
+      - ./loki-config.yml:/etc/loki/config.yml:ro
+    command: -config.file=/etc/loki/config.yml
+    networks:
+      - hirenova-network
+      - agent_network
+    environment:
+      - NODE_ENV=production
+
+  # --- Grafana (Log Visualization) ---
+  # Optional but recommended for viewing and querying logs
+  grafana:
+    image: grafana/grafana:latest
+    deploy:
+      replicas: 1
+      restart_policy:
+        condition: on-failure
+      placement:
+        constraints:
+          - node.role == manager
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 512M
+        reservations:
+          cpus: '0.5'
+          memory: 256M
+    ports:
+      - ${GRAFANA_PORT:-9065}:3000
+    volumes:
+      - grafana-data:/var/lib/grafana
+      - ./monitoring/grafana-datasources.yml:/etc/grafana/provisioning/datasources/datasources.yml:ro
+    networks:
+      - hirenova-network
+      - agent_network
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_ADMIN_PASSWORD:-admin}
+      - GF_INSTALL_PLUGINS=grafana-piechart-panel
+      - GF_SERVER_ROOT_URL=${GRAFANA_ROOT_URL:-http://localhost:3000}
+
+  # --- Prometheus (Metrics Collection) ---
+  # Core metrics collection and storage
+  prometheus:
+    image: prom/prometheus:latest
+    deploy:
+      replicas: 1
+      restart_policy:
+        condition: on-failure
+      placement:
+        constraints:
+          - node.role == manager
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 4G
+        reservations:
+          cpus: '1.0'
+          memory: 2G
+    ports:
+      - ${PROMETHEUS_PORT:-9090}:9090
+    volumes:
+      - prometheus-data:/prometheus
+      - ./monitoring/prometheus-config.yml:/etc/prometheus/prometheus.yml:ro
+      - ./monitoring/prometheus-rules.yml:/etc/prometheus/rules.yml:ro
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    command:
+      - --config.file=/etc/prometheus/prometheus.yml
+      - --storage.tsdb.path=/prometheus
+      - --storage.tsdb.retention.time=30d
+      - --web.console.libraries=/usr/share/prometheus/console_libraries
+      - --web.console.templates=/usr/share/prometheus/consoles
+      - --web.enable-lifecycle
+    networks:
+      - hirenova-network
+      - agent_network
+    environment:
+      - NODE_ENV=production
+
+  # --- Node Exporter (Host Metrics) ---
+  # Collects system metrics (CPU, memory, disk, network) from each node
+  node-exporter:
+    image: prom/node-exporter:latest
+    deploy:
+      mode: global  # Run on every node
+      restart_policy:
+        condition: on-failure
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 256M
+        reservations:
+          cpus: '0.25'
+          memory: 128M
+    volumes:
+      - /proc:/host/proc:ro
+      - /sys:/host/sys:ro
+      - /:/rootfs:ro
+    command:
+      - --path.procfs=/host/proc
+      - --path.sysfs=/host/sys
+      - --collector.filesystem.mount-points-exclude=^/(sys|proc|dev|host|etc)($$|/)
+    networks:
+      - hirenova-network
+      - agent_network
+    ports:
+      - 9100:9100
+
+  # --- cAdvisor (Container Metrics) ---
+  # Collects detailed container metrics
+  cadvisor:
+    image: gcr.io/cadvisor/cadvisor:latest
+    deploy:
+      mode: global  # Run on every node to monitor local containers
+      restart_policy:
+        condition: on-failure
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 512M
+        reservations:
+          cpus: '0.25'
+          memory: 256M
+    volumes:
+      - /:/rootfs:ro
+      - /var/run:/var/run:ro
+      - /sys:/sys:ro
+      - /var/lib/docker/:/var/lib/docker:ro
+      - /dev/disk/:/dev/disk:ro
+    ports:
+      - 8080:8080
+    networks:
+      - hirenova-network
+      - agent_network
+    privileged: true
+    devices:
+      - /dev/kmsg
+
+  # --- Alertmanager (Alerting) ---
+  # Handles alerts from Prometheus
+  alertmanager:
+    image: prom/alertmanager:latest
+    deploy:
+      replicas: 1
+      restart_policy:
+        condition: on-failure
+      placement:
+        constraints:
+          - node.role == manager
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 512M
+        reservations:
+          cpus: '0.25'
+          memory: 256M
+    ports:
+      - ${ALERTMANAGER_PORT:-9093}:9093
+    volumes:
+      - alertmanager-data:/alertmanager
+      - ./monitoring/alertmanager-config.yml:/etc/alertmanager/alertmanager.yml:ro
+    command:
+      - --config.file=/etc/alertmanager/alertmanager.yml
+      - --storage.path=/alertmanager
+    networks:
+      - hirenova-network
+      - agent_network
+
+volumes:
+  loki-data:
+    driver: local
+  grafana-data:
+    driver: local
+  prometheus-data:
+    driver: local
+  alertmanager-data:
+    driver: local
+
+networks:
+  hirenova-network:
+    driver: overlay
+    attachable: true
+  agent_network:
+    external: true
+

@@ -45,3 +45,8 @@ Thumbs.db
 .next
 out
 test-output
+
+# Environment variables
+.env.docker
+.env.example
+.env

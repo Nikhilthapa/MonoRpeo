@@ -1,168 +1,270 @@
-# Prisma Single Database Architecture
+# Domain-Driven Prisma Schema Architecture
 
-This directory contains a unified Prisma schema organized by category (Auth, Job, Company, Vendor). All models are in a single database, allowing for cross-category relationships and queries while maintaining logical organization.
+This directory contains domain-driven Prisma schemas organized by use-case/domain. Each domain has its own database, enabling better normalization, scalability, and domain isolation.
 
 ## Structure
 
 ```
 prisma/
-├── schema.prisma          # Unified schema with all models organized by category
-├── seed.ts                # Unified seed script for all categories
-├── clients/               # Prisma client wrapper
-│   └── index.ts          # Single Prisma client instance
-└── shared/                # Shared utilities (reference)
-    ├── base.prisma
-    └── enums.prisma
+├── schemas/
+│   ├── identity/
+│   │   └── schema.prisma      # Identity & Access Management
+│   ├── tenant/
+│   │   └── schema.prisma      # Multi-Tenancy & Configuration
+│   ├── organization/
+│   │   └── schema.prisma      # Organizational Structure
+│   ├── job/
+│   │   └── schema.prisma      # Job Marketplace
+│   ├── audit/
+│   │   └── schema.prisma      # Audit & Compliance
+│   └── workflow/
+│       └── schema.prisma      # Process Management
+├── migrations/
+│   ├── identity/
+│   ├── tenant/
+│   ├── organization/
+│   ├── job/
+│   ├── audit/
+│   └── workflow/
+├── clients/
+│   └── index.ts              # Client exports
+└── config/
+    └── prisma.config.ts      # Multi-database configuration
 ```
 
-## Schema Organization
+## Domain Organization
 
-The `schema.prisma` file is organized into categories:
+### Identity Domain (`identity_db`)
+**Port**: 5433  
+**Schema**: `prisma/schemas/identity/schema.prisma`
 
-- **AUTH CATEGORY** - User authentication, system roles, permissions, and user profiles
-- **JOB CATEGORY** - Job postings, applications, saved jobs, and skills
-- **COMPANY CATEGORY** - Company management, company users, roles, and permissions
-- **VENDOR CATEGORY** - Vendor management, vendor users, roles, and permissions
+- **User** - Core user identity
+- **SystemRole**, **SystemPermission** - System-level RBAC
+- **Skill** - Skills catalog
+- **UserSkill**, **Experience**, **Education**, **Resume** - User profile data
+
+### Tenant Domain (`tenant_db`)
+**Port**: 5434  
+**Schema**: `prisma/schemas/tenant/schema.prisma`
+
+- **Tenant** - Multi-tenant configuration
+- **CustomField**, **CustomFieldValue** - Dynamic field system
+
+### Organization Domain (`organization_db`)
+**Port**: 5435  
+**Schema**: `prisma/schemas/organization/schema.prisma`
+
+- **Company**, **CompanyUser**, **CompanyRole**, **CompanyPermission**
+- **Vendor**, **VendorUser**, **VendorRole**, **VendorPermission**
+
+### Job Domain (`job_db`)
+**Port**: 5436  
+**Schema**: `prisma/schemas/job/schema.prisma`
+
+- **Job**, **JobApplication**, **SavedJob**
+- **JobSkill** (references Skill.id from identity_db)
+
+### Audit Domain (`audit_db`)
+**Port**: 5437  
+**Schema**: `prisma/schemas/audit/schema.prisma`
+
+- **AuditLog** - Audit trail
+- **VersionHistory** - Entity version history
+
+### Workflow Domain (`workflow_db`)
+**Port**: 5438  
+**Schema**: `prisma/schemas/workflow/schema.prisma`
+
+- **Workflow**, **WorkflowStep**, **WorkflowInstance**
 
 ## Setup
 
 ### 1. Environment Variables
 
-Create a `.env` file at the root with a single database URL:
+Create a `.env.docker` file with database URLs for each domain:
 
 ```env
-DATABASE_URL="postgresql://user:password@localhost:5432/hirenova?schema=public"
+# Identity Database
+IDENTITY_DATABASE_URL=postgresql://postgres:prisma@postgres-identity:5432/identity_db?schema=public
+
+# Tenant Database
+TENANT_DATABASE_URL=postgresql://postgres:prisma@postgres-tenant:5432/tenant_db?schema=public
+
+# Organization Database
+ORGANIZATION_DATABASE_URL=postgresql://postgres:prisma@postgres-organization:5432/organization_db?schema=public
+
+# Job Database
+JOB_DATABASE_URL=postgresql://postgres:prisma@postgres-job:5432/job_db?schema=public
+
+# Audit Database
+AUDIT_DATABASE_URL=postgresql://postgres:prisma@postgres-audit:5432/audit_db?schema=public
+
+# Workflow Database
+WORKFLOW_DATABASE_URL=postgresql://postgres:prisma@postgres-workflow:5432/workflow_db?schema=public
 ```
 
-For production with connection pooling:
+### 2. Generate Prisma Clients
 
-```env
-DATABASE_URL="postgresql://user:password@localhost:5432/hirenova?schema=public&connection_limit=10&pool_timeout=20"
-```
-
-### 2. Generate Prisma Client
+Generate clients for all domains:
 
 ```bash
-npm run prisma:generate
+./build/scripts/generate-prisma-clients.sh
+```
+
+Or generate for a specific domain:
+
+```bash
+./build/scripts/generate-prisma-clients.sh identity
 ```
 
 ### 3. Run Migrations
 
-```bash
-npm run prisma:migrate
-```
-
-### 4. Seed Database
+Initialize all databases:
 
 ```bash
-npm run prisma:seed
+./build/scripts/init-databases.sh
 ```
 
-This will create:
-- System permissions and roles
-- Company permissions
-- Vendor permissions
-- Super Admin role with all system permissions
-- Super Admin user (email: `admin@hirenova.com`, password: `admin123`)
-- Sample skills
+Or initialize a specific domain:
 
-**⚠️ Important**: Change the default super admin password after first login!
+```bash
+./build/scripts/init-databases.sh identity
+```
 
-## Available Scripts
+Run migrations for a specific domain:
 
-- `npm run prisma:generate` - Generate Prisma Client
-- `npm run prisma:migrate` - Create and run migrations (development)
-- `npm run prisma:migrate:deploy` - Deploy migrations (production)
-- `npm run prisma:seed` - Seed the database
-- `npm run prisma:studio` - Open Prisma Studio (database GUI)
-- `npm run prisma:push` - Push schema changes to database (development)
+```bash
+npx prisma migrate deploy --schema=prisma/schemas/identity/schema.prisma
+```
+
+### 4. Seed Databases
+
+Seed scripts should be updated to work with domain-specific databases.
 
 ## Usage in Code
 
-Import the Prisma client in your application:
+### Import Domain Clients
 
 ```typescript
-import { prisma } from '@/prisma/clients';
+import {
+  identityPrisma,
+  tenantPrisma,
+  organizationPrisma,
+  jobPrisma,
+  auditPrisma,
+  workflowPrisma,
+} from '@hirenova/database/clients';
 
-// Access all models through single client
-const user = await prisma.user.findUnique({ where: { email: '...' } });
-const jobs = await prisma.job.findMany({ where: { status: 'PUBLISHED' } });
-const company = await prisma.company.findUnique({ where: { id: '...' } });
-const vendor = await prisma.vendor.findUnique({ where: { id: '...' } });
-
-// Cross-category queries are possible
-const jobWithCompany = await prisma.job.findUnique({
-  where: { id: '...' },
-  include: { company: true }
-});
-
-const userWithApplications = await prisma.user.findUnique({
-  where: { id: '...' },
-  include: {
-    jobApplications: {
-      include: { job: true }
-    }
-  }
-});
+// Use domain-specific clients
+const user = await identityPrisma.user.findUnique({ where: { id } });
+const tenant = await tenantPrisma.tenant.findUnique({ where: { id } });
+const company = await organizationPrisma.company.findUnique({ where: { id } });
+const job = await jobPrisma.job.findUnique({ where: { id } });
 ```
 
-## Category Responsibilities
+### Using DatabaseManager
 
-### Auth Category
-- User authentication and authorization
-- System roles and permissions (SystemRole, SystemPermission)
-- User profiles (skills, experience, education, resumes)
+```typescript
+import { DatabaseManager } from '@hirenova/database';
 
-### Job Category
-- Job postings
-- Job applications
-- Saved jobs
-- Job skills (references shared Skill model)
+// Get client by domain
+const identityClient = databaseManager.getIdentityClient();
+const tenantClient = databaseManager.getTenantClient();
+```
 
-### Company Category
-- Company profiles
-- Company users and roles
-- Company-scoped permissions (CompanyPermission)
+### Cross-Database References
 
-### Vendor Category
-- Vendor profiles
-- Vendor users and roles
-- Vendor-scoped permissions (VendorPermission)
+For cross-database references, use ReferenceResolverService:
+
+```typescript
+import { ReferenceResolverService } from '@hirenova/database';
+
+// Resolve user reference
+const user = await referenceResolver.resolveUser(userId);
+
+// Resolve multiple users (batch lookup)
+const users = await referenceResolver.resolveUsers([userId1, userId2]);
+
+// Get denormalized fields
+const userEmail = await referenceResolver.getUserEmail(userId);
+const userName = await referenceResolver.getUserName(userId);
+```
+
+## Cross-Database Reference Patterns
+
+### ID References
+
+Models store only IDs for cross-database references:
+
+```prisma
+model JobApplication {
+  userId    String  // Reference to User.id in identity_db
+  userEmail String? // Denormalized for quick access
+  userName  String? // Denormalized for display
+}
+```
+
+### Denormalization
+
+Frequently accessed fields are denormalized:
+
+- `JobApplication.userEmail` - From User.email
+- `AuditLog.userEmail` - From User.email
+- `CompanyUser.userEmail` - From User.email
+- `Job.companyName` - From Company.name
+
+### Event-Driven Updates
+
+Denormalized fields are updated via events for eventual consistency.
+
+## Migration Commands
+
+### Generate Clients
+
+```bash
+# All domains
+./build/scripts/generate-prisma-clients.sh
+
+# Specific domain
+./build/scripts/generate-prisma-clients.sh identity
+```
+
+### Run Migrations
+
+```bash
+# All domains
+./build/scripts/init-databases.sh
+
+# Specific domain
+./build/scripts/init-databases.sh identity
+
+# Manual migration
+npx prisma migrate deploy --schema=prisma/schemas/identity/schema.prisma
+```
+
+### Create Migration
+
+```bash
+npx prisma migrate dev --schema=prisma/schemas/identity/schema.prisma --name add_user_field
+```
 
 ## Benefits
 
-1. **Simplicity:** One database, one client, easier to manage
-2. **Relationships:** Can maintain foreign key relationships across categories
-3. **Transactions:** Cross-category transactions possible
-4. **Performance:** Single connection pool
-5. **Development:** Easier local development setup
-6. **Queries:** Can easily query across categories with joins
+1. **Normalization**: Each database optimized for its domain
+2. **Scalability**: Scale databases independently based on load
+3. **Isolation**: Domain failures don't cascade
+4. **Performance**: Optimized indexes and queries per domain
+5. **Compliance**: Audit data isolated and secure
+6. **Maintainability**: Clear domain boundaries
 
-## Model Relationships
+## Migration from Single Database
 
-- **User** ↔ **CompanyUser** ↔ **Company**
-- **User** ↔ **VendorUser** ↔ **Vendor**
-- **User** ↔ **JobApplication** ↔ **Job** ↔ **Company**
-- **User** ↔ **UserSkill** ↔ **Skill** ↔ **JobSkill** ↔ **Job**
-- **Company** ↔ **CompanyRole** ↔ **CompanyPermission**
-- **Vendor** ↔ **VendorRole** ↔ **VendorPermission**
+If migrating from a single database:
 
-## Production Deployment
+1. Backup existing database
+2. Run migration script: `./build/scripts/migrate-to-domain-databases.sh`
+3. Update denormalized fields
+4. Verify data integrity
+5. Deploy new structure
 
-For production, use the deploy command:
-
-```bash
-npm run prisma:migrate:deploy
-```
-
-This will run migrations without prompting and is suitable for CI/CD pipelines.
-
-## Prisma Studio
-
-Open Prisma Studio to view and edit your database:
-
-```bash
-npm run prisma:studio
-```
-
-This opens a web interface where you can browse all tables across all categories.
+See `build/compose/DOMAIN_ARCHITECTURE.md` for detailed architecture documentation.
