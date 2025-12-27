@@ -5,11 +5,11 @@
 generator client {
   provider = "prisma-client-js"
   output   = "../../../libs/backend/database/src/clients/generated/job"
+  engineType = "client"
 }
 
 datasource db {
   provider = "postgresql"
-  url      = env("JOB_DATABASE_URL")
 }
 
 // Shared Enums

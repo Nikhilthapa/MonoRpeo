@@ -50,3 +50,6 @@ test-output
 .env.docker
 .env.example
 .env
+
+# Prisma
+prisma/migrations

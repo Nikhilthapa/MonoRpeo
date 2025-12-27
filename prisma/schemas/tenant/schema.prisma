@@ -5,11 +5,11 @@
 generator client {
   provider = "prisma-client-js"
   output   = "../../../libs/backend/database/src/clients/generated/tenant"
+  engineType = "client"
 }
 
 datasource db {
   provider = "postgresql"
-  url      = env("TENANT_DATABASE_URL")
 }
 
 // Shared Enums
