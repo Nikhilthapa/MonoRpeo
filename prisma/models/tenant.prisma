@@ -1,0 +1,81 @@
+// ERP FOUNDATION - Multi-Tenancy & Audit
+
+model Tenant {
+  id      String  @id @default(cuid())
+  name    String
+  slug    String  @unique
+  email   String  @unique
+  phone   String?
+  website String?
+  logoUrl String?
+
+  // Subscription & Billing
+  subscriptionPlan      String? // e.g., "free", "pro", "enterprise"
+  subscriptionStatus    String? // e.g., "active", "trial", "expired", "cancelled"
+  subscriptionStartDate DateTime?
+  subscriptionEndDate   DateTime?
+  maxUsers              Int?      @default(10)
+  maxJobs               Int?      @default(100)
+
+  // Settings
+  settings Json? // Tenant-specific settings (JSON)
+  features Json? // Enabled features (JSON)
+
+  // Status
+  isActive   Boolean @default(true)
+  isVerified Boolean @default(false)
+
+  // Timestamps
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+
+  // Relationships
+  users        User[]
+  companies    Company[]
+  vendors      Vendor[]
+  jobs         Job[]
+  customFields CustomField[]
+  workflows    Workflow[]
+  auditLogs    AuditLog[]
+
+  @@index([slug])
+  @@index([email])
+  @@index([isActive, deletedAt])
+  @@map("tenants")
+}
+
+model AuditLog {
+  id       String  @id @default(cuid())
+  tenantId String? // Optional for system-level audits
+
+  // Entity Information
+  entityType String // e.g., "User", "Job", "Company"
+  entityId   String
+
+  // Action Details
+  action   AuditAction
+  changes  Json? // Before/after values (JSON)
+  metadata Json? // Additional context (JSON)
+
+  // User Tracking
+  userId    String? // User who performed the action
+  userEmail String? // Cached for quick lookup
+  ipAddress String?
+  userAgent String?
+
+  // Timestamps
+  createdAt DateTime @default(now())
+
+  // Relationships
+  user   User?   @relation(fields: [userId], references: [id], onDelete: SetNull)
+  tenant Tenant? @relation(fields: [tenantId], references: [id], onDelete: SetNull)
+
+  @@index([entityType, entityId])
+  @@index([tenantId, createdAt])
+  @@index([userId, createdAt])
+  @@index([action, createdAt])
+  @@index([createdAt])
+  @@map("audit_logs")
+}
+

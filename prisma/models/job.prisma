@@ -1,0 +1,148 @@
+// JOB CATEGORY - Job Postings & Applications
+
+model Job {
+  id        String  @id @default(cuid())
+  tenantId  String? // Multi-tenancy support
+  companyId String
+
+  // Basic Info
+  title       String
+  description String? @db.Text
+  jobOverview String? @db.Text
+
+  // Employment Details
+  employmentType   String?
+  workModel        String?
+  location         String?
+  country          String?
+  state            String?
+  city             String?
+  numberOfOpenings Int     @default(1)
+
+  // Experience & Qualification
+  experienceLevel      String?
+  minExperience        Int?
+  maxExperience        Int?
+  educationRequirement String?
+
+  // Compensation
+  minSalary    Decimal? @db.Decimal(10, 2)
+  maxSalary    Decimal? @db.Decimal(10, 2)
+  currency     String?
+  paymentType  String?
+  noticePeriod String?
+
+  // ERP Enhancements
+  metadata Json? // Custom fields and extensible data
+  version  Int   @default(1) // Optimistic locking
+
+  // Status
+  status JobStatus @default(DRAFT)
+
+  // Timestamps
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  publishedAt DateTime?
+  closedAt    DateTime?
+  deletedAt   DateTime?
+  archivedAt  DateTime?
+
+  // Audit Fields
+  createdBy String?
+  updatedBy String?
+
+  // Relationships
+  tenant         Tenant?          @relation(fields: [tenantId], references: [id], onDelete: SetNull)
+  company        Company          @relation(fields: [companyId], references: [id])
+  creator        User?            @relation("JobCreatedBy", fields: [createdBy], references: [id], onDelete: SetNull)
+  updater        User?            @relation("JobUpdatedBy", fields: [updatedBy], references: [id], onDelete: SetNull)
+  applications   JobApplication[]
+  savedByUsers   SavedJob[]
+  requiredSkills JobSkill[]
+
+  @@index([tenantId, companyId, status])
+  @@index([tenantId, status, deletedAt])
+  @@index([companyId, status])
+  @@index([status, deletedAt])
+  @@index([deletedAt])
+  @@index([archivedAt])
+  @@index([createdAt])
+  @@map("jobs")
+}
+
+model JobApplication {
+  id     String @id @default(cuid())
+  jobId  String
+  userId String
+
+  // Application Details
+  coverLetter String?           @db.Text
+  status      ApplicationStatus @default(PENDING)
+
+  // ERP Enhancements
+  metadata Json?
+  version  Int   @default(1)
+
+  // Timestamps
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+  deletedAt  DateTime?
+  archivedAt DateTime?
+
+  // Audit Fields
+  createdBy String?
+  updatedBy String?
+
+  // Relationships
+  job     Job   @relation(fields: [jobId], references: [id])
+  user    User  @relation(fields: [userId], references: [id])
+  creator User? @relation("JobApplicationCreatedBy", fields: [createdBy], references: [id], onDelete: SetNull)
+  updater User? @relation("JobApplicationUpdatedBy", fields: [updatedBy], references: [id], onDelete: SetNull)
+
+  @@unique([jobId, userId])
+  @@index([jobId, userId])
+  @@index([userId, status])
+  @@index([jobId, status])
+  @@index([status, deletedAt])
+  @@index([deletedAt])
+  @@index([archivedAt])
+  @@map("job_applications")
+}
+
+model SavedJob {
+  id     String @id @default(cuid())
+  jobId  String
+  userId String
+
+  // Timestamps
+  createdAt DateTime @default(now())
+
+  // Relationships
+  job  Job  @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([jobId, userId])
+  @@index([userId])
+  @@index([jobId])
+  @@map("saved_jobs")
+}
+
+model JobSkill {
+  id         String  @id @default(cuid())
+  jobId      String
+  skillId    String
+  isRequired Boolean @default(true)
+
+  // Timestamps
+  createdAt DateTime @default(now())
+
+  // Relationships
+  job   Job   @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  skill Skill @relation(fields: [skillId], references: [id], onDelete: Cascade)
+
+  @@unique([jobId, skillId])
+  @@index([jobId])
+  @@index([skillId])
+  @@map("job_skills")
+}
+

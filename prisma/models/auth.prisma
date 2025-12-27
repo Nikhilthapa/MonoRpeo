@@ -1,0 +1,280 @@
+// AUTH CATEGORY - User Authentication & Profile
+
+model User {
+  id        String  @id @default(cuid())
+  tenantId  String? // Multi-tenancy support
+  email     String  @unique
+  password  String?
+  firstName String?
+  lastName  String?
+  phone     String?
+  avatarUrl String?
+
+  // Profile fields
+  shortDescription     String?  @db.Text
+  profileSummary       String?  @db.Text
+  currentJobFunction   String?
+  linkedInProfile      String?
+  yearsOfExperience    String?
+  preferredLocation    String?
+  noticePeriod         String?
+  preferredWorkModel   String?
+  currentAnnualSalary  Decimal? @db.Decimal(10, 2)
+  expectedAnnualSalary Decimal? @db.Decimal(10, 2)
+
+  // ERP Enhancements
+  metadata Json? // Custom fields and extensible data (JSON)
+  version  Int   @default(1) // Optimistic locking
+
+  // Status
+  emailVerified Boolean @default(false)
+  isActive      Boolean @default(true)
+
+  // Timestamps
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+  deletedAt  DateTime?
+  archivedAt DateTime?
+
+  // Audit Fields
+  createdBy String?
+  updatedBy String?
+
+  // Relationships
+  tenant       Tenant? @relation(fields: [tenantId], references: [id], onDelete: SetNull)
+  creator      User?   @relation("UserCreatedBy", fields: [createdBy], references: [id], onDelete: SetNull)
+  updater      User?   @relation("UserUpdatedBy", fields: [updatedBy], references: [id], onDelete: SetNull)
+  createdUsers User[]  @relation("UserCreatedBy")
+  updatedUsers User[]  @relation("UserUpdatedBy")
+
+  systemRole   SystemRole? @relation("UserSystemRole", fields: [systemRoleId], references: [id])
+  systemRoleId String?     @unique
+
+  companyUsers CompanyUser[]
+  vendorUsers  VendorUser[]
+
+  jobApplications JobApplication[]
+  savedJobs       SavedJob[]
+  userSkills      UserSkill[]
+  experiences     Experience[]
+  educations      Education[]
+  resumes         Resume[]
+
+  auditLogs                  AuditLog[]
+  versionHistory             VersionHistory[]   @relation("VersionHistoryChangedBy")
+  workflowInstancesStarted   WorkflowInstance[] @relation("WorkflowStartedBy")
+  workflowInstancesCompleted WorkflowInstance[] @relation("WorkflowCompletedBy")
+
+  // Audit relationships - Created/Updated by this user
+  createdSystemRoles     SystemRole[]     @relation("SystemRoleCreatedBy")
+  updatedSystemRoles     SystemRole[]     @relation("SystemRoleUpdatedBy")
+  createdJobs            Job[]            @relation("JobCreatedBy")
+  updatedJobs            Job[]            @relation("JobUpdatedBy")
+  createdCompanies       Company[]        @relation("CompanyCreatedBy")
+  updatedCompanies       Company[]        @relation("CompanyUpdatedBy")
+  createdVendors         Vendor[]         @relation("VendorCreatedBy")
+  updatedVendors         Vendor[]         @relation("VendorUpdatedBy")
+  createdJobApplications JobApplication[] @relation("JobApplicationCreatedBy")
+  updatedJobApplications JobApplication[] @relation("JobApplicationUpdatedBy")
+  createdCompanyUsers    CompanyUser[]    @relation("CompanyUserCreatedBy")
+  updatedCompanyUsers    CompanyUser[]    @relation("CompanyUserUpdatedBy")
+  createdVendorUsers     VendorUser[]     @relation("VendorUserCreatedBy")
+  updatedVendorUsers     VendorUser[]     @relation("VendorUserUpdatedBy")
+  createdCompanyRoles    CompanyRole[]    @relation("CompanyRoleCreatedBy")
+  updatedCompanyRoles    CompanyRole[]    @relation("CompanyRoleUpdatedBy")
+  createdVendorRoles     VendorRole[]     @relation("VendorRoleCreatedBy")
+  updatedVendorRoles     VendorRole[]     @relation("VendorRoleUpdatedBy")
+
+  @@unique([tenantId, email])
+  @@index([email])
+  @@index([tenantId, isActive, deletedAt])
+  @@index([deletedAt])
+  @@index([archivedAt])
+  @@map("users")
+}
+
+model SystemRole {
+  id          String  @id @default(cuid())
+  name        String  @unique
+  description String? @db.Text
+
+  // ERP Enhancements
+  version  Int   @default(1)
+  metadata Json?
+
+  // Timestamps
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+  deletedAt  DateTime?
+  archivedAt DateTime?
+
+  // Audit Fields
+  createdBy String?
+  updatedBy String?
+
+  // Relationships
+  users       User[]                 @relation("UserSystemRole")
+  permissions SystemRolePermission[]
+
+  creator User? @relation("SystemRoleCreatedBy", fields: [createdBy], references: [id], onDelete: SetNull)
+  updater User? @relation("SystemRoleUpdatedBy", fields: [updatedBy], references: [id], onDelete: SetNull)
+
+  @@index([deletedAt])
+  @@index([archivedAt])
+  @@map("system_roles")
+}
+
+model SystemPermission {
+  id          String          @id @default(cuid())
+  name        String          @unique
+  description String?         @db.Text
+  scope       PermissionScope @default(SYSTEM)
+
+  // Timestamps
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relationships
+  systemRolePermissions SystemRolePermission[]
+
+  @@map("system_permissions")
+}
+
+model SystemRolePermission {
+  id           String @id @default(cuid())
+  roleId       String
+  permissionId String
+
+  // Timestamps
+  createdAt DateTime @default(now())
+
+  // Relationships
+  role       SystemRole       @relation(fields: [roleId], references: [id], onDelete: Cascade)
+  permission SystemPermission @relation(fields: [permissionId], references: [id], onDelete: Cascade)
+
+  @@unique([roleId, permissionId])
+  @@index([roleId])
+  @@index([permissionId])
+  @@map("system_role_permissions")
+}
+
+model Skill {
+  id          String  @id @default(cuid())
+  name        String  @unique
+  category    String?
+  description String? @db.Text
+
+  // Timestamps
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relationships
+  userSkills UserSkill[]
+  jobSkills  JobSkill[]
+
+  @@index([name])
+  @@map("skills")
+}
+
+model UserSkill {
+  id          String  @id @default(cuid())
+  userId      String
+  skillId     String
+  proficiency String? // e.g., "Beginner", "Intermediate", "Advanced", "Expert"
+
+  // Timestamps
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relationships
+  user  User  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  skill Skill @relation(fields: [skillId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, skillId])
+  @@index([userId])
+  @@index([skillId])
+  @@map("user_skills")
+}
+
+model Experience {
+  id     String @id @default(cuid())
+  userId String
+
+  // Experience Details
+  title          String
+  company        String
+  employmentType String?
+  location       String?
+  description    String? @db.Text
+
+  // Dates
+  startDate DateTime
+  endDate   DateTime?
+  isCurrent Boolean   @default(false)
+
+  // Timestamps
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+
+  // Relationships
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([deletedAt])
+  @@map("experiences")
+}
+
+model Education {
+  id     String @id @default(cuid())
+  userId String
+
+  // Education Details
+  degree       String
+  institution  String
+  fieldOfStudy String?
+  location     String?
+  description  String? @db.Text
+
+  // Dates & Grades
+  startDate   DateTime?
+  endDate     DateTime?
+  grade       String?
+  isCompleted Boolean   @default(false)
+
+  // Timestamps
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+
+  // Relationships
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([deletedAt])
+  @@map("educations")
+}
+
+model Resume {
+  id     String @id @default(cuid())
+  userId String
+
+  // File Details
+  fileName  String
+  fileUrl   String
+  fileSize  Int? // in bytes
+  mimeType  String?
+  isPrimary Boolean @default(false)
+
+  // Timestamps
+  uploadedAt DateTime  @default(now())
+  deletedAt  DateTime?
+
+  // Relationships
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([deletedAt])
+  @@map("resumes")
+}
+

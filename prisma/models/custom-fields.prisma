@@ -1,0 +1,61 @@
+// ERP CUSTOM FIELDS - Dynamic Field System
+
+model CustomField {
+  id         String          @id @default(cuid())
+  tenantId   String? // Null for global fields
+  entityType String // e.g., "User", "Job", "Company"
+  name       String
+  label      String
+  fieldType  CustomFieldType
+
+  // Field Configuration
+  isRequired      Boolean @default(false)
+  defaultValue    String?
+  validationRules Json? // Validation rules (JSON)
+  options         Json? // For SELECT/MULTI_SELECT types (JSON array)
+
+  // Display
+  displayOrder Int     @default(0)
+  isVisible    Boolean @default(true)
+
+  // Timestamps
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+
+  // Relationships
+  tenant Tenant?            @relation(fields: [tenantId], references: [id], onDelete: SetNull)
+  values CustomFieldValue[]
+
+  @@unique([tenantId, entityType, name])
+  @@index([tenantId, entityType, isVisible])
+  @@index([entityType, deletedAt])
+  @@map("custom_fields")
+}
+
+model CustomFieldValue {
+  id            String @id @default(cuid())
+  customFieldId String
+  entityType    String // e.g., "User", "Job"
+  entityId      String // ID of the entity
+
+  // Value Storage (flexible based on field type)
+  textValue    String?   @db.Text
+  numberValue  Decimal?  @db.Decimal(20, 6)
+  dateValue    DateTime?
+  booleanValue Boolean?
+  jsonValue    Json?
+
+  // Timestamps
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relationships
+  customField CustomField @relation(fields: [customFieldId], references: [id], onDelete: Cascade)
+
+  @@unique([customFieldId, entityType, entityId])
+  @@index([entityType, entityId])
+  @@index([customFieldId])
+  @@map("custom_field_values")
+}
+

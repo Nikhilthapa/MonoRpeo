@@ -47,3 +47,7 @@ out
 
 test-output
 vite.config.*.timestamp*
+
+# Prisma
+prisma/migrations
+libs/backend/database/src/clients/generated

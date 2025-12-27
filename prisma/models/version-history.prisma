@@ -1,0 +1,29 @@
+// ERP VERSION HISTORY - Change Tracking
+
+model VersionHistory {
+  id         String @id @default(cuid())
+  entityType String // e.g., "User", "Job", "Company"
+  entityId   String
+
+  // Version Information
+  version    Int // Version number
+  changes    Json // Snapshot of entity at this version
+  changeType String // "CREATE", "UPDATE", "DELETE"
+
+  // Tracking
+  changedBy    String?
+  changeReason String? @db.Text
+
+  // Timestamps
+  createdAt DateTime @default(now())
+
+  // Relationships
+  user User? @relation("VersionHistoryChangedBy", fields: [changedBy], references: [id], onDelete: SetNull)
+
+  @@unique([entityType, entityId, version])
+  @@index([entityType, entityId])
+  @@index([entityType, entityId, version])
+  @@index([changedBy, createdAt])
+  @@map("version_history")
+}
+

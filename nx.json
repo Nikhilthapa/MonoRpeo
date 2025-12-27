@@ -28,7 +28,8 @@
           "buildDepsName": "build-deps",
           "watchDepsName": "watch-deps"
         }
-      }
+      },
+      "exclude": ["libs/backend/database/*"]
     },
     {
       "plugin": "@nx/next/plugin",
@@ -71,6 +72,15 @@
         "typecheckTargetName": "typecheck",
         "buildDepsTargetName": "build-deps",
         "watchDepsTargetName": "watch-deps"
+      }
+    },
+    {
+      "plugin": "@nx/js/typescript",
+      "include": ["libs/backend/database/*"],
+      "options": {
+        "typecheck": {
+          "targetName": "typecheck"
+        }
       }
     }
   ],

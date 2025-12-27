@@ -21,19 +21,25 @@
   },
   "private": true,
   "dependencies": {
+    "@nestjs/common": "^11.0.0",
+    "@nestjs/core": "^11.0.0",
+    "@nestjs/platform-express": "^11.0.0",
     "@prisma/adapter-pg": "^7.2.0",
     "bcryptjs": "^2.4.3",
     "dotenv": "^17.2.3",
     "next": "~16.0.1",
     "pg": "^8.16.3",
     "react": "^19.0.0",
-    "react-dom": "^19.0.0"
+    "react-dom": "^19.0.0",
+    "reflect-metadata": "^0.1.13",
+    "rxjs": "^7.8.0"
   },
   "devDependencies": {
     "@babel/core": "^7.14.5",
     "@babel/preset-react": "^7.14.5",
     "@eslint/js": "^9.8.0",
     "@nestjs/schematics": "^11.0.0",
+    "@nestjs/testing": "^11.0.0",
     "@next/eslint-plugin-next": "^16.0.1",
     "@nx/devkit": "22.3.3",
     "@nx/eslint": "22.3.3",
@@ -96,6 +102,7 @@
   },
   "workspaces": [
     "apps/*",
-    "libs/*"
+    "libs/*",
+    "libs/backend/*"
   ]
 }

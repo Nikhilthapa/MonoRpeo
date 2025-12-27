@@ -1,0 +1,86 @@
+// ERP WORKFLOW SYSTEM - Approval Workflows
+
+model Workflow {
+  id          String  @id @default(cuid())
+  tenantId    String?
+  name        String
+  description String? @db.Text
+  entityType  String // e.g., "Job", "Company", "User"
+
+  // Workflow Configuration
+  isActive  Boolean @default(true)
+  isDefault Boolean @default(false) // Default workflow for entity type
+
+  // Timestamps
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+
+  // Relationships
+  tenant    Tenant?            @relation(fields: [tenantId], references: [id], onDelete: SetNull)
+  steps     WorkflowStep[]
+  instances WorkflowInstance[]
+
+  @@unique([tenantId, entityType, name])
+  @@index([tenantId, entityType, isActive])
+  @@index([deletedAt])
+  @@map("workflows")
+}
+
+model WorkflowStep {
+  id          String  @id @default(cuid())
+  workflowId  String
+  stepOrder   Int // Order of step in workflow
+  name        String
+  description String? @db.Text
+
+  // Step Configuration
+  approverRoleId String? // Role required to approve this step
+  isRequired     Boolean @default(true)
+  canSkip        Boolean @default(false)
+
+  // Timestamps
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relationships
+  workflow          Workflow           @relation(fields: [workflowId], references: [id], onDelete: Cascade)
+  workflowInstances WorkflowInstance[]
+
+  @@unique([workflowId, stepOrder])
+  @@index([workflowId])
+  @@map("workflow_steps")
+}
+
+model WorkflowInstance {
+  id         String @id @default(cuid())
+  workflowId String
+  entityType String // e.g., "Job", "Company"
+  entityId   String // ID of the entity in workflow
+
+  // Current State
+  currentStepId String?
+  status        WorkflowStatus @default(PENDING)
+
+  // Tracking
+  startedBy   String?
+  completedBy String?
+  completedAt DateTime?
+
+  // Timestamps
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relationships
+  workflow    Workflow      @relation(fields: [workflowId], references: [id])
+  currentStep WorkflowStep? @relation(fields: [currentStepId], references: [id], onDelete: SetNull)
+  starter     User?         @relation("WorkflowStartedBy", fields: [startedBy], references: [id], onDelete: SetNull)
+  completer   User?         @relation("WorkflowCompletedBy", fields: [completedBy], references: [id], onDelete: SetNull)
+
+  @@unique([entityType, entityId])
+  @@index([workflowId, status])
+  @@index([entityType, entityId])
+  @@index([status, createdAt])
+  @@map("workflow_instances")
+}
+
