@@ -2,7 +2,8 @@
 // Single database with models organized by category: Auth, Job, Company, Vendor
 
 generator client {
-  provider = "prisma-client-js"
+  provider = "prisma-client"
+  output   = "../generated/prisma"
 }
 
 datasource db {
