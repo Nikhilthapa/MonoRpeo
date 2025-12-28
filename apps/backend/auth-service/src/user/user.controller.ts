@@ -22,4 +22,13 @@ export class UserController {
   ) {
     return this.userService.updateUser(id, updateDto, tenantId);
   }
+
+  @Get(':id/profile-status')
+  @UseGuards(JwtAuthGuard)
+  async getProfileStatus(
+    @Param('id') id: string,
+    @Headers('x-tenant-id') tenantId?: string
+  ) {
+    return this.userService.getProfileStatus(id, tenantId);
+  }
 }

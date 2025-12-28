@@ -9,6 +9,12 @@ module.exports = {
       devtoolModuleFilenameTemplate: '[absolute-resource-path]',
     }),
   },
+  resolve: {
+    extensions: ['.ts', '.js'],
+    alias: {
+      'class-transformer/storage': require.resolve('class-transformer'),
+    },
+  },
   plugins: [
     new NxAppWebpackPlugin({
       target: 'node',

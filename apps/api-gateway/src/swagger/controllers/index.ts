@@ -1,6 +1,7 @@
 export * from './auth.controller';
 export * from './user.controller';
 export * from './profile.controller';
+export * from './storage.controller';
 export * from './tenant.controller';
 export * from './custom-fields.controller';
 export * from './job.controller';

@@ -11,6 +11,7 @@
     "serve:home-web": "PORT=3001 nx start home-web",
     "serve:admin-panel-web": "PORT=3002 nx start admin-panel-web",
     "serve:api-gateway": "nx serve api-gateway",
+    "serve:auth-service": "nx serve auth-service",
     "dev:home-web": "PORT=3003 nx dev home-web",
     "dev:admin-panel-web": "PORT=3002 nx dev admin-panel-web",
     "prisma:generate": "./build/scripts/generate-prisma-clients.sh",

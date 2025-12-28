@@ -31,4 +31,44 @@ export class UserController {
   ) {
     return { message: 'This endpoint is proxied to the auth service' };
   }
+
+  @Get(':id/profile-status')
+  @ApiOperation({ 
+    summary: 'Get profile status', 
+    description: 'Get user profile verification status and completion info' 
+  })
+  @ApiParam({ name: 'id', description: 'User ID' })
+  @ApiResponse({ 
+    status: 200, 
+    description: 'Profile status retrieved successfully',
+    schema: {
+      type: 'object',
+      properties: {
+        userId: { type: 'string' },
+        email: { type: 'string' },
+        profileStatus: { type: 'string', enum: ['PENDING_REVIEW', 'APPROVED', 'REJECTED'] },
+        emailVerified: { type: 'boolean' },
+        profileComplete: {
+          type: 'object',
+          properties: {
+            hasJobFunction: { type: 'boolean' },
+            hasLocation: { type: 'boolean' },
+            hasExperience: { type: 'boolean' },
+            hasSalary: { type: 'boolean' },
+            hasResume: { type: 'boolean' },
+          },
+        },
+        resumeCount: { type: 'number' },
+      },
+    },
+  })
+  @ApiResponse({ status: 404, description: 'User not found' })
+  @ApiHeader({ name: 'Authorization', required: true, description: 'Bearer token' })
+  @ApiHeader({ name: 'x-tenant-id', required: false, description: 'Tenant ID' })
+  async getProfileStatus(
+    @Param('id') id: string,
+    @Headers('x-tenant-id') tenantId?: string
+  ) {
+    return { message: 'This endpoint is proxied to the auth service' };
+  }
 }

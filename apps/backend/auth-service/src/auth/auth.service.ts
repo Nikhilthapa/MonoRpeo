@@ -1,9 +1,13 @@
-import { Injectable, UnauthorizedException, ConflictException } from '@nestjs/common';
+import {
+  Injectable,
+  UnauthorizedException,
+  ConflictException,
+} from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcryptjs';
-import { PrismaService } from '../prisma/prisma.service';
-import { EventBusService } from '@hirenova/messaging';
-import { AUTH_EVENTS, UserCreatedPayload, AuthLoginPayload } from '@hirenova/shared-events';
+import { PrismaService } from '@org/database';
+import { EventBusService } from '@org/messaging';
+import { AUTH_EVENTS, UserCreatedPayload, AuthLoginPayload } from '@org/events';
 import { LoginDto } from './dto/login.dto';
 import { RegisterDto } from './dto/register.dto';
 import { VerifyOTPDto } from './dto/otp.dto';
@@ -15,7 +19,7 @@ export class AuthService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly jwtService: JwtService,
-    private readonly eventBus: EventBusService
+    private readonly eventBus: EventBusService,
   ) {}
 
   async login(loginDto: LoginDto) {
@@ -31,7 +35,10 @@ export class AuthService {
       throw new UnauthorizedException('Invalid credentials');
     }
 
-    const isPasswordValid = await bcrypt.compare(loginDto.password, user.password);
+    const isPasswordValid = await bcrypt.compare(
+      loginDto.password,
+      user.password,
+    );
     if (!isPasswordValid) {
       throw new UnauthorizedException('Invalid credentials');
     }
@@ -92,6 +99,7 @@ export class AuthService {
         password: hashedPassword,
         firstName: registerDto.firstName,
         lastName: registerDto.lastName,
+        phone: registerDto.phone,
         tenantId: registerDto.tenantId,
         emailVerified: false,
         isActive: true,
@@ -233,7 +241,11 @@ export class AuthService {
     return user;
   }
 
-  private generateToken(userId: string, email: string, tenantId?: string | null): string {
+  private generateToken(
+    userId: string,
+    email: string,
+    tenantId?: string | null,
+  ): string {
     return this.jwtService.sign({
       userId,
       email,

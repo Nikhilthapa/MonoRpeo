@@ -5,7 +5,7 @@ import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
-  
+
   app.useGlobalPipes(
     new ValidationPipe({
       whitelist: true,
@@ -14,7 +14,7 @@ async function bootstrap() {
       transformOptions: {
         enableImplicitConversion: true,
       },
-    })
+    }),
   );
 
   const config = new DocumentBuilder()
@@ -47,7 +47,14 @@ async function bootstrap() {
   SwaggerModule.setup('api-docs', app, document, {
     swaggerOptions: {
       persistAuthorization: true,
+      tryItOutEnabled: true,
     },
+    customSiteTitle: 'API Gateway Documentation',
+    customJs: [
+      'https://unpkg.com/swagger-ui-dist@5.18.2/swagger-ui-bundle.js',
+      'https://unpkg.com/swagger-ui-dist@5.18.2/swagger-ui-standalone-preset.js',
+    ],
+    customCssUrl: 'https://unpkg.com/swagger-ui-dist@5.18.2/swagger-ui.css',
   });
 
   app.enableCors({
@@ -58,7 +65,9 @@ async function bootstrap() {
   const port = process.env.PORT || 3000;
   await app.listen(port);
   console.log(`API Gateway running on http://localhost:${port}`);
-  console.log(`Swagger documentation available at http://localhost:${port}/api-docs`);
+  console.log(
+    `Swagger documentation available at http://localhost:${port}/api-docs`,
+  );
 }
 
 bootstrap();

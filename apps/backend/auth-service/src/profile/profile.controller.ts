@@ -5,6 +5,7 @@ import { CreateSkillDto } from './dto/create-skill.dto';
 import { CreateExperienceDto } from './dto/create-experience.dto';
 import { CreateEducationDto } from './dto/create-education.dto';
 import { CreateResumeDto } from './dto/create-resume.dto';
+import { VerifyProfileDto } from './dto/verify-profile.dto';
 
 @Controller('users/:userId')
 @UseGuards(JwtAuthGuard)
@@ -49,5 +50,10 @@ export class ProfileController {
   @Post('resumes')
   async addResume(@Param('userId') userId: string, @Body() createResumeDto: CreateResumeDto) {
     return this.profileService.addResume(userId, createResumeDto);
+  }
+
+  @Post('verify-profile')
+  async verifyProfile(@Param('userId') userId: string, @Body() verifyProfileDto: VerifyProfileDto) {
+    return this.profileService.verifyProfile(userId, verifyProfileDto);
   }
 }

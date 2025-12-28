@@ -16,7 +16,13 @@ type PrismaClientInstance =
   | typeof auditPrisma
   | typeof workflowPrisma;
 
-type DomainName = 'identity' | 'tenant' | 'organization' | 'job' | 'audit' | 'workflow';
+type DomainName =
+  | 'identity'
+  | 'tenant'
+  | 'organization'
+  | 'job'
+  | 'audit'
+  | 'workflow';
 
 @Injectable()
 export class DatabaseManager implements OnApplicationShutdown {
@@ -36,7 +42,7 @@ export class DatabaseManager implements OnApplicationShutdown {
   }
 
   async getClient<T extends PrismaClientInstance>(
-    domain: DomainName
+    domain: DomainName,
   ): Promise<T> {
     const client = this.clients.get(domain) as T;
     if (!client) {
@@ -86,7 +92,7 @@ export class DatabaseManager implements OnApplicationShutdown {
   async onApplicationShutdown(signal?: string) {
     if (this.isShuttingDown) {
       this.logger.debug(
-        `Shutdown already in progress (signal: ${signal || 'undefined'}), skipping duplicate call`
+        `Shutdown already in progress (signal: ${signal || 'undefined'}), skipping duplicate call`,
       );
       return this.shutdownPromise || Promise.resolve();
     }
@@ -98,10 +104,10 @@ export class DatabaseManager implements OnApplicationShutdown {
 
   private async performShutdown(signal?: string) {
     this.logger.log(
-      `Shutting down database connections (signal: ${signal || 'undefined'})...`
+      `Shutting down database connections (signal: ${signal || 'undefined'})...`,
     );
-    const shutdownPromises = Array.from(this.clients.values()).map(
-      (client) => client.$disconnect()
+    const shutdownPromises = Array.from(this.clients.values()).map((client) =>
+      client.$disconnect(),
     );
 
     await Promise.all(shutdownPromises);
@@ -109,7 +115,7 @@ export class DatabaseManager implements OnApplicationShutdown {
   }
 
   async healthCheck(
-    domains: DomainName[]
+    domains: DomainName[],
   ): Promise<{ domain: DomainName; isConnected: boolean }[]> {
     const healthCheckPromises = domains.map(async (domain) => {
       const client = this.clients.get(domain);

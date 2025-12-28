@@ -1,15 +1,19 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
-import { PrismaService } from '../prisma/prisma.service';
-import { EventBusService } from '@hirenova/messaging';
-import { AUTH_EVENTS, UserUpdatedPayload } from '@hirenova/shared-events';
+import { DatabaseManager, PrismaService } from '@org/database';
+import { EventBusService } from '@org/messaging';
+import { AUTH_EVENTS, UserUpdatedPayload } from '@org/events';
 import { UpdateUserDto } from './dto/update-user.dto';
 
 @Injectable()
 export class UserService {
   constructor(
-    private readonly prisma: PrismaService,
-    private readonly eventBus: EventBusService
+    private readonly eventBus: EventBusService,
+    private readonly databaseManager: DatabaseManager,
   ) {}
+
+  get prisma() {
+    return this.databaseManager.getIdentityClient();
+  }
 
   async getUser(userId: string, tenantId?: string) {
     const user = await this.prisma.user.findFirst({
@@ -40,7 +44,11 @@ export class UserService {
     return user;
   }
 
-  async updateUser(userId: string, updateDto: UpdateUserDto, tenantId?: string) {
+  async updateUser(
+    userId: string,
+    updateDto: UpdateUserDto,
+    tenantId?: string,
+  ) {
     const user = await this.prisma.user.findFirst({
       where: {
         id: userId,
@@ -74,5 +82,52 @@ export class UserService {
     });
 
     return updatedUser;
+  }
+
+  async getProfileStatus(userId: string, tenantId?: string) {
+    const user = await this.prisma.user.findFirst({
+      where: {
+        id: userId,
+        tenantId: tenantId || null,
+        deletedAt: null,
+      },
+      select: {
+        id: true,
+        email: true,
+        profileStatus: true,
+        emailVerified: true,
+        currentJobFunction: true,
+        preferredLocation: true,
+        yearsOfExperience: true,
+        currentAnnualSalary: true,
+        resumes: {
+          where: { deletedAt: null },
+          select: {
+            id: true,
+            fileName: true,
+            isPrimary: true,
+          },
+        },
+      },
+    });
+
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+
+    return {
+      userId: user.id,
+      email: user.email,
+      profileStatus: user.profileStatus,
+      emailVerified: user.emailVerified,
+      profileComplete: {
+        hasJobFunction: !!user.currentJobFunction,
+        hasLocation: !!user.preferredLocation,
+        hasExperience: !!user.yearsOfExperience,
+        hasSalary: !!user.currentAnnualSalary,
+        hasResume: user.resumes.length > 0,
+      },
+      resumeCount: user.resumes.length,
+    };
   }
 }

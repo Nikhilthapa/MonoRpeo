@@ -5,6 +5,7 @@ import {
   CreateExperienceDto,
   CreateEducationDto,
   CreateResumeDto,
+  VerifyProfileDto,
 } from '../dto/profile.dto';
 
 @ApiTags('User Profiles')
@@ -83,6 +84,24 @@ export class ProfileController {
   @ApiResponse({ status: 201, description: 'Resume added successfully' })
   @ApiHeader({ name: 'Authorization', required: true, description: 'Bearer token' })
   async addResume(@Param('userId') userId: string, @Body() createResumeDto: CreateResumeDto) {
+    return { message: 'This endpoint is proxied to the auth service' };
+  }
+
+  @Post('verify-profile')
+  @ApiOperation({ 
+    summary: 'Verify profile', 
+    description: 'Submit profile details for verification (job function, location, experience, salary, resume)' 
+  })
+  @ApiParam({ name: 'userId', description: 'User ID' })
+  @ApiBody({ type: VerifyProfileDto })
+  @ApiResponse({ status: 200, description: 'Profile verification submitted successfully' })
+  @ApiHeader({ name: 'Authorization', required: true, description: 'Bearer token' })
+  @ApiHeader({ name: 'x-tenant-id', required: false, description: 'Tenant ID' })
+  async verifyProfile(
+    @Param('userId') userId: string,
+    @Body() verifyProfileDto: VerifyProfileDto,
+    @Headers('x-tenant-id') tenantId?: string
+  ) {
     return { message: 'This endpoint is proxied to the auth service' };
   }
 }

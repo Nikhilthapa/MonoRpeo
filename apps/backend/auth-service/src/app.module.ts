@@ -1,11 +1,19 @@
+import { DatabaseModule } from '@org/database';
 import { Module } from '@nestjs/common';
 import { AuthModule } from './auth/auth.module';
 import { UserModule } from './user/user.module';
 import { ProfileModule } from './profile/profile.module';
-import { PrismaModule } from './prisma/prisma.module';
-import { MessagingModule } from '@hirenova/messaging';
+import { StorageModule } from './storage/storage.module';
+import { MessagingModule } from '@org/messaging';
 
 @Module({
-  imports: [PrismaModule, MessagingModule, AuthModule, UserModule, ProfileModule],
+  imports: [
+    DatabaseModule,
+    MessagingModule,
+    AuthModule,
+    UserModule,
+    ProfileModule,
+    StorageModule,
+  ],
 })
 export class AppModule {}

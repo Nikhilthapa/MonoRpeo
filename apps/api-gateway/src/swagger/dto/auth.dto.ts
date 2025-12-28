@@ -49,6 +49,11 @@ export class RegisterDto {
   @IsString()
   lastName?: string;
 
+  @ApiPropertyOptional({ example: '+1234567890', description: 'Phone number' })
+  @IsOptional()
+  @IsString()
+  phone?: string;
+
   @ApiPropertyOptional({
     example: 'tenant-123',
     description: 'Tenant ID (optional)',
