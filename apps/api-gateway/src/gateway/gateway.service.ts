@@ -12,6 +12,7 @@ export class GatewayService {
   private readonly logger = new Logger(GatewayService.name);
   private readonly serviceRoutes: Map<string, string> = new Map([
     ['/api/auth', process.env.AUTH_SERVICE_URL || 'http://localhost:3001'],
+    ['/api/users', process.env.AUTH_SERVICE_URL || 'http://localhost:3001'],
     ['/api/tenants', process.env.TENANT_SERVICE_URL || 'http://localhost:3002'],
     ['/api/jobs', process.env.JOB_SERVICE_URL || 'http://localhost:3003'],
     [
@@ -19,6 +20,8 @@ export class GatewayService {
       process.env.COMPANY_SERVICE_URL || 'http://localhost:3004',
     ],
     ['/api/audit', process.env.AUDIT_SERVICE_URL || 'http://localhost:3005'],
+    ['/api/search', process.env.SEARCH_SERVICE_URL || 'http://localhost:3006'],
+    ['/api/notifications', process.env.NOTIFICATION_SERVICE_URL || 'http://localhost:3007'],
   ]);
 
   constructor(
