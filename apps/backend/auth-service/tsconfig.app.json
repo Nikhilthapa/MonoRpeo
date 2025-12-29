@@ -13,7 +13,19 @@
   "exclude": ["eslint.config.js", "eslint.config.cjs", "eslint.config.mjs"],
   "references": [
     {
+      "path": "../../../libs/backend/storage"
+    },
+    {
       "path": "../../../libs/shared/utils/tsconfig.lib.json"
+    },
+    {
+      "path": "../../../libs/shared/types/tsconfig.lib.json"
+    },
+    {
+      "path": "../../../libs/backend/messaging/tsconfig.lib.json"
+    },
+    {
+      "path": "../../../libs/shared/events/tsconfig.lib.json"
     },
     {
       "path": "../../../libs/backend/database/tsconfig.lib.json"
