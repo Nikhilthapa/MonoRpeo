@@ -13,14 +13,15 @@
   },
   "dependencies": {
     "@hookform/resolvers": "^3.3.4",
+    "@org/ui": "workspace:*",
     "axios": "^1.6.2",
+    "framer-motion": "^12.23.26",
     "lucide-react": "^0.562.0",
     "next": "~16.0.1",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "react-hook-form": "^7.49.2",
-    "zod": "^3.22.4",
-    "@org/ui": "workspace:*"
+    "zod": "^3.22.4"
   },
   "devDependencies": {
     "@commitlint/cli": "^20.2.0",

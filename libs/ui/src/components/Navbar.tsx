@@ -38,6 +38,7 @@ const defaultNavItems: NavItem[] = [
     children: [],
   },
   {
+    
     label: "About Us",
     href: "#about",
   },

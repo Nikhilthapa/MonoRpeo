@@ -1,39 +1,43 @@
-import type { Metadata } from "next";
-import { Inter, Space_Grotesk, Nunito } from "next/font/google";
-import "./globals.css";
+import './global.css';
+import { Inter, Space_Grotesk, Nunito } from 'next/font/google';
+import type { Metadata } from 'next';
 
 const inter = Inter({
-  subsets: ["latin"],
-  variable: "--font-inter",
-  display: "swap",
-  weight: ["400", "500", "700"],
+  subsets: ['latin'],
+  weight: ['300', '400', '500', '600', '700'],
+  variable: '--font-inter',
 });
 
 const spaceGrotesk = Space_Grotesk({
-  subsets: ["latin"],
-  variable: "--font-space-grotesk",
-  display: "swap",
-  weight: ["300", "400", "500", "700"],
+  subsets: ['latin'],
+  weight: ['400', '500', '600', '700'],
+  variable: '--font-space-grotesk',
 });
 
 const nunito = Nunito({
-  subsets: ["latin"],
-  variable: "--font-nunito",
-  display: "swap",
-  weight: ["700"],
+  subsets: ['latin'],
+  weight: ['400', '500', '600', '700'],
+  variable: '--font-nunito',
 });
 
 export const metadata: Metadata = {
-  title: "HireNova - Find Your Next Big Opportunity",
-  description: "Create your profile and find your next big opportunity",
+  title: 'HireNova - AI-Powered Job Matching Platform',
+  description: 'Find your dream job with HireNova. Connect with top employers and discover opportunities tailored to your skills and aspirations.',
+  viewport: {
+    width: 'device-width',
+    initialScale: 1,
+    maximumScale: 5,
+  },
 };
 
-export default function RootLayout({ children }: { children: React.ReactNode }) {
+export default function RootLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
   return (
-    <html lang="en">
-      <body className={`${inter.variable} ${spaceGrotesk.variable} ${nunito.variable} font-sans`}>
-        {children}
-      </body>
+    <html lang="en" className={`${inter.variable} ${spaceGrotesk.variable} ${nunito.variable}`}>
+      <body className={inter.className}>{children}</body>
     </html>
   );
 }

@@ -11,7 +11,16 @@ export default {
   ],
   presets: [sharedTheme],
   theme: {
-    extend: {},
+    extend: {
+      colors: {
+        'first-shade': 'var(--first-shade, #F0F0F0)',
+        'second-shade': 'var(--second-shade, #CCCCCC)',
+        'white-colour': 'var(--white-colour, #FCFCFC)',
+        'primary-colour': 'var(--primary-colour, #7F5BFF)',
+        'second-bg-colour': 'var(--second-bg-colour, #1F2937)',
+        'secondary-aaccent': 'var(--secondary-aaccent, #57447F)',
+      },
+    },
   },
   plugins: [],
 };
