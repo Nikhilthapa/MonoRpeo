@@ -324,8 +324,8 @@ export function PathToOpportunitySection() {
                   {/* Second Row: Experience and Salary */}
                   <div className="flex items-center path-opportunity-job-second-row-gap path-opportunity-job-second-row-margin">
                     {/* Experience */}
-                    <div className="flex items-center gap-[10px]">
-                      <svg xmlns="http://www.w3.org/2000/svg" width="18" height="17" viewBox="0 0 18 17" fill="none" className="w-[18px] h-[17px] flex-shrink-0">
+                    <div className="flex items-center gap-[8px] sm:gap-[10px]">
+                      <svg xmlns="http://www.w3.org/2000/svg" width="18" height="17" viewBox="0 0 18 17" fill="none" className="w-[14px] h-[13px] sm:w-[16px] sm:h-[15px] lg:w-[18px] lg:h-[17px] flex-shrink-0">
                         <path d="M15.15 4.0835H2.35C1.46634 4.0835 0.75 4.82968 0.75 5.75014V14.0834C0.75 15.0038 1.46634 15.75 2.35 15.75H15.15C16.0337 15.75 16.75 15.0038 16.75 14.0834V5.75014C16.75 4.82968 16.0337 4.0835 15.15 4.0835Z" stroke="#CCCCCC" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
                         <path d="M11.95 15.7498V2.41664C11.95 1.97462 11.7814 1.55071 11.4814 1.23815C11.1813 0.925592 10.7743 0.75 10.35 0.75H7.14999C6.72564 0.75 6.31868 0.925592 6.01862 1.23815C5.71856 1.55071 5.54999 1.97462 5.54999 2.41664V15.7498" stroke="#CCCCCC" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
                       </svg>
@@ -333,8 +333,8 @@ export function PathToOpportunitySection() {
                     </div>
                     
                     {/* Salary */}
-                    <div className="flex items-center gap-[10px]">
-                      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="12" viewBox="0 0 16 12" fill="none" className="w-[16px] h-[12px] flex-shrink-0">
+                    <div className="flex items-center gap-[8px] sm:gap-[10px]">
+                      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="12" viewBox="0 0 16 12" fill="none" className="w-[12px] h-[9px] sm:w-[14px] sm:h-[11px] lg:w-[16px] lg:h-[12px] flex-shrink-0">
                         <path d="M10.4622 9H13.0933C13.2196 9 13.3253 8.95886 13.4107 8.87657C13.496 8.79429 13.5387 8.69257 13.5387 8.57143V3.42857C13.5387 3.30686 13.496 3.20514 13.4107 3.12343C13.3253 3.04171 13.2199 3.00057 13.0942 3H10.4613C10.3357 3 10.2302 3.04114 10.1449 3.12343C10.0596 3.20571 10.0169 3.30743 10.0169 3.42857V8.57143C10.0169 8.69314 10.0596 8.79486 10.1449 8.87657C10.2302 8.95829 10.3357 8.99943 10.4613 9M10.9058 8.14286V3.85714H12.6498V8.14286H10.9058ZM5.368 9H8C8.12622 9 8.2317 8.95886 8.31644 8.87657C8.40119 8.79429 8.44385 8.69257 8.44444 8.57143V3.42857C8.44444 3.30686 8.40178 3.20514 8.31644 3.12343C8.23111 3.04171 8.12563 3.00057 8 3H5.368C5.24178 3 5.136 3.04114 5.05067 3.12343C4.96533 3.20571 4.92326 3.30743 4.92444 3.42857V8.57143C4.92444 8.69314 4.96681 8.79486 5.05156 8.87657C5.1363 8.95829 5.24207 8.99943 5.36889 9M5.81333 8.14286V3.85714H7.55556V8.14286H5.81333ZM2.46222 9H3.35111V3H2.46222V9ZM0 12V0H16V12H0ZM0.888889 11.1429H15.1111V0.857143H0.888889V11.1429Z" fill="#CCCCCC"/>
                       </svg>
                       <span className="experience-text">₹7-9 LPA</span>

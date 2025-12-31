@@ -29,8 +29,8 @@ const defaultItems: NavItem[] = [
 ];
 
 const defaultCtaButtons = [
-  { label: 'Build Your Team', href: '/signup', variant: 'primary' as const },
-  { label: 'Find a Job', href: '/signup', variant: 'secondary' as const },
+  { label: 'Build Your Team', href: '/login', variant: 'primary' as const },
+  { label: 'Find a Job', href: '/login', variant: 'secondary' as const },
 ];
 
 export function Navbar({

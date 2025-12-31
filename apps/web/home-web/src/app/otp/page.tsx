@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { post } from '@/lib/api';
 import { getTempUser, clearTempUser, setStoredUser } from '@/lib/auth';
+import { Logo } from '@/components/ui/Logo';
 import { Button } from '@/components/ui/Button';
 import { ProgressHeader } from '@/components/ui/ProgressHeader';
 
@@ -127,24 +128,20 @@ export default function OTPPage() {
   }
 
   return (
-    <div className="min-h-screen bg-background flex items-center justify-center p-4">
-      <div className="w-full max-w-md">
-        <div className="bg-card rounded-2xl p-8 md:p-12 border border-border shadow-2xl">
-          {/* Back Button */}
-          <Link
-            href="/signup"
-            className="flex items-center gap-2 text-sm mb-6 text-gray-300 hover:text-white transition-colors"
-          >
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-            </svg>
-            Back
-          </Link>
-
+    <div className="w-full min-h-screen bg-background py-6 sm:py-8 lg:py-10 px-6 sm:px-8 lg:px-12">
+      <div className="w-full max-w-4xl mx-auto flex flex-col">
+        {/* Progress Header Section */}
+        <div className="w-full mb-6 sm:mb-8">
           <ProgressHeader currentStep={2} totalSteps={2} />
+        </div>
 
-          {/* Heading */}
-          <h1 className="text-3xl md:text-4xl font-bold mb-4 text-center">Verify Your Email</h1>
+        {/* Logo Section */}
+        <div className="w-full mb-6 sm:mb-8">
+          <Logo />
+        </div>
+
+        {/* Heading */}
+        <h1 className="signup-heading mb-4 sm:mb-6 lg:mb-9 text-center">Verify Your Email</h1>
 
           {/* Description */}
           <p className="text-gray-300 mb-8 text-center">
@@ -158,8 +155,8 @@ export default function OTPPage() {
             </div>
           )}
 
-          {/* Form */}
-          <form onSubmit={handleSubmit} className="space-y-6">
+        {/* Form */}
+        <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-6 md:space-y-8 lg:space-y-[50px]">
             {/* OTP Input Container */}
             <div className="flex gap-2 justify-center">
               {otp.map((digit, index) => (
@@ -186,13 +183,15 @@ export default function OTPPage() {
               ))}
             </div>
 
-            <Button type="submit" disabled={isSubmitting}>
+          <div className="mt-4 sm:mt-6 lg:mt-[50px]">
+            <Button type="submit" disabled={isSubmitting} className="login-button">
               {isSubmitting ? 'Verifying...' : 'Verify Email'}
             </Button>
-          </form>
+          </div>
+        </form>
 
-          {/* Resend Link */}
-          <div className="mt-6 text-center">
+        {/* Resend Link */}
+        <div className="mt-6 text-center">
             <p className="text-sm text-gray-400">
               Didn't receive the code?{' '}
               {resendCooldown > 0 ? (

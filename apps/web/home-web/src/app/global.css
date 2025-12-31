@@ -133,6 +133,36 @@ button, a {
   cursor: not-allowed;
 }
 
+/* Login page button styles - same as signup */
+.login-button {
+  border-radius: 30px;
+  background: var(--primary-colour, #7F5BFF);
+  padding: 20px 10px;
+  justify-content: center;
+  align-items: center;
+  gap: 10px;
+  color: var(--white-colour, #FCFCFC);
+  font-family: var(--font-space-grotesk), sans-serif;
+  font-size: 16px;
+  font-style: normal;
+  font-weight: 500;
+  line-height: normal;
+  display: flex;
+  transition: all 0.2s;
+  border: none;
+  cursor: pointer;
+  width: 100%;
+}
+
+.login-button:hover {
+  opacity: 0.9;
+}
+
+.login-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
 /* Google button styles */
 .google-button {
   display: flex;
@@ -149,8 +179,8 @@ button, a {
   line-height: normal;
   width: 100%;
   border-radius: 10px;
-  background: var(--card, #1A0B2E);
-  border: 1px solid var(--border, #4C2E8A);
+  background: transparent;
+  border: 1px solid var(--second-shade, #CCC);
   transition: all 0.2s;
   cursor: pointer;
 }
@@ -172,14 +202,160 @@ button, a {
 }
 
 .google-button:hover {
-  border-color: var(--primary-colour, #7F5BFF);
-  background: rgba(26, 11, 46, 0.8);
+  border-color: var(--white-colour, #FCFCFC);
+  color: var(--white-colour, #FCFCFC);
 }
 
 .google-button:focus {
   outline: none;
   border-color: var(--primary-colour, #7F5BFF);
   box-shadow: 0 0 0 2px rgba(127, 91, 255, 0.1);
+}
+
+/* Company signup button styles */
+.company-signup-button {
+  display: flex;
+  padding: 16px;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  flex-shrink: 0;
+  align-self: stretch;
+  border-radius: 10px;
+  border: 1px solid var(--second-shade, #CCC);
+  background: transparent;
+  transition: all 0.2s;
+  cursor: pointer;
+  width: 100%;
+  text-decoration: none;
+}
+
+@media (min-width: 640px) {
+  .company-signup-button {
+    padding: 18px;
+    gap: 20px;
+  }
+}
+
+@media (min-width: 1024px) {
+  .company-signup-button {
+    padding: 20px;
+    gap: 25px;
+  }
+}
+
+.company-signup-button:hover {
+  border-color: var(--white-colour, #FCFCFC);
+}
+
+.company-signup-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 28px;
+  height: 28px;
+}
+
+@media (min-width: 640px) {
+  .company-signup-icon {
+    width: 30px;
+    height: 30px;
+  }
+}
+
+@media (min-width: 1024px) {
+  .company-signup-icon {
+    width: 32px;
+    height: 32px;
+  }
+}
+
+.company-signup-content {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  flex: 1;
+}
+
+@media (min-width: 640px) {
+  .company-signup-content {
+    gap: 9px;
+  }
+}
+
+@media (min-width: 1024px) {
+  .company-signup-content {
+    gap: 10px;
+  }
+}
+
+.company-signup-heading {
+  color: var(--white-colour, #FCFCFC);
+  font-family: var(--font-space-grotesk), sans-serif;
+  font-size: 16px;
+  font-style: normal;
+  font-weight: 500;
+  line-height: normal;
+  margin: 0;
+}
+
+@media (min-width: 640px) {
+  .company-signup-heading {
+    font-size: 18px;
+  }
+}
+
+@media (min-width: 1024px) {
+  .company-signup-heading {
+    font-size: 20px;
+  }
+}
+
+.company-signup-subheading {
+  color: var(--second-shade, #CCC);
+  font-family: var(--font-space-grotesk), sans-serif;
+  font-size: 14px;
+  font-style: normal;
+  font-weight: 500;
+  line-height: normal;
+  margin: 0;
+}
+
+@media (min-width: 640px) {
+  .company-signup-subheading {
+    font-size: 15px;
+  }
+}
+
+@media (min-width: 1024px) {
+  .company-signup-subheading {
+    font-size: 16px;
+  }
+}
+
+.company-signup-arrow {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  color: var(--white-colour, #FCFCFC);
+  width: 20px;
+  height: 20px;
+}
+
+@media (min-width: 640px) {
+  .company-signup-arrow {
+    width: 22px;
+    height: 22px;
+  }
+}
+
+@media (min-width: 1024px) {
+  .company-signup-arrow {
+    width: 24px;
+    height: 24px;
+  }
 }
 
 /* Global form label styles */
@@ -204,7 +380,7 @@ button, a {
   border-radius: 10px;
   border: 1px solid var(--second-shade, #CCC);
   width: 100%;
-  background: var(--card, #1A0B2E);
+  background: transparent;
   color: var(--white-colour, #FCFCFC);
   font-family: var(--font-space-grotesk), sans-serif;
   font-size: 14px;
@@ -631,10 +807,22 @@ html {
 .step-title {
   color: var(--white-colour, #FCFCFC);
   font-family: var(--font-space-grotesk), sans-serif;
-  font-size: 24px;
+  font-size: 18px;
   font-style: normal;
   font-weight: 700;
   line-height: normal;
+}
+
+@media (min-width: 640px) {
+  .step-title {
+    font-size: 20px;
+  }
+}
+
+@media (min-width: 1024px) {
+  .step-title {
+    font-size: 24px;
+  }
 }
 
 /* Profile name styles */
@@ -727,7 +915,7 @@ html {
 .location-text {
   color: var(--second-shade, #CCC);
   font-family: var(--font-space-grotesk), sans-serif;
-  font-size: 10px;
+  font-size: 11px;
   font-style: normal;
   font-weight: 500;
   line-height: normal;
@@ -772,7 +960,7 @@ html {
   color: var(--second-shade, #CCC);
   text-align: right;
   font-family: var(--font-space-grotesk), sans-serif;
-  font-size: 10px;
+  font-size: 11px;
   font-style: normal;
   font-weight: 500;
   line-height: normal;
@@ -874,10 +1062,22 @@ html {
 .step-description {
   color: var(--second-shade, #CCC);
   font-family: var(--font-space-grotesk), sans-serif;
-  font-size: 16px;
+  font-size: 12px;
   font-style: normal;
   font-weight: 400;
   line-height: normal;
+}
+
+@media (min-width: 640px) {
+  .step-description {
+    font-size: 14px;
+  }
+}
+
+@media (min-width: 1024px) {
+  .step-description {
+    font-size: 16px;
+  }
 }
 
 /* Skill badge styles */
@@ -1048,13 +1248,13 @@ html {
 /* Category button styles */
 .category-button {
   display: flex;
-  padding: 12px 18px;
+  padding: 10px 16px;
   justify-content: center;
   align-items: center;
   gap: 8px;
   color: var(--white-colour, #FCFCFC);
   font-family: var(--font-space-grotesk), sans-serif;
-  font-size: 12px;
+  font-size: 11px;
   font-style: normal;
   font-weight: 500;
   line-height: normal;
@@ -1062,8 +1262,8 @@ html {
 
 @media (min-width: 640px) {
   .category-button {
-    padding: 16px 24px;
-    font-size: 14px;
+    padding: 14px 20px;
+    font-size: 13px;
     gap: 9px;
   }
 }
@@ -1284,6 +1484,16 @@ html {
   box-shadow: 0 0 4px 0 rgba(255, 255, 255, 0.25);
   position: relative;
   overflow: hidden;
+}
+
+.testimonial-card-inactive {
+  opacity: 0.6;
+  filter: grayscale(0.3);
+  box-shadow: inset 4px 0 8px rgba(200, 200, 200, 0.25);
+}
+
+.testimonial-quote-icon-inactive {
+  opacity: 0.5;
 }
 
 @media (min-width: 640px) {
@@ -1943,10 +2153,17 @@ html {
 
 .path-opportunity-kicker {
   margin-bottom: 8px;
-  font-size: 14px;
+  font-size: 12px;
 }
 
 @media (min-width: 640px) {
+  .path-opportunity-kicker {
+    margin-bottom: 8px;
+    font-size: 14px;
+  }
+}
+
+@media (min-width: 1024px) {
   .path-opportunity-kicker {
     margin-bottom: 8px;
     font-size: 16px;
@@ -1954,7 +2171,7 @@ html {
 }
 
 .path-opportunity-heading {
-  font-size: 24px;
+  font-size: 20px;
   font-weight: 700;
   line-height: 1.25;
   margin-bottom: 12px;
@@ -1962,14 +2179,14 @@ html {
 
 @media (min-width: 640px) {
   .path-opportunity-heading {
-    font-size: 30px;
+    font-size: 26px;
     margin-bottom: 12px;
   }
 }
 
 @media (min-width: 768px) {
   .path-opportunity-heading {
-    font-size: 36px;
+    font-size: 32px;
     margin-bottom: 12px;
   }
 }
@@ -1983,13 +2200,13 @@ html {
 
 .path-opportunity-description {
   margin-bottom: 24px;
-  font-size: 14px;
+  font-size: 12px;
 }
 
 @media (min-width: 640px) {
   .path-opportunity-description {
     margin-bottom: 30px;
-    font-size: 16px;
+    font-size: 14px;
   }
 }
 
@@ -2002,7 +2219,7 @@ html {
 
 .path-opportunity-button {
   width: 100%;
-  font-size: 14px;
+  font-size: 12px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -2010,6 +2227,13 @@ html {
 }
 
 @media (min-width: 640px) {
+  .path-opportunity-button {
+    width: auto;
+    font-size: 14px;
+  }
+}
+
+@media (min-width: 1024px) {
   .path-opportunity-button {
     width: auto;
     font-size: 16px;

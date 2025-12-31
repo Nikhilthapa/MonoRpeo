@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-// import Link from 'next/link';
+import Link from 'next/link';
 import { post } from '@/lib/api';
 import { setTempUser } from '@/lib/auth';
 import { Logo } from '@/components/ui/Logo';
@@ -94,8 +94,16 @@ export default function SignupPage() {
   };
 
   return (
-    <div className="w-full min-h-screen bg-gradient-to-br from-[#110128] via-[#1a0538] to-[#0d0217] py-6 sm:py-8 lg:py-10 px-6 sm:px-8 lg:px-12">
-      <div className="w-full max-w-4xl mx-auto flex flex-col">
+    <div className="w-full min-h-screen bg-background py-6 sm:py-8 lg:py-10 px-6 sm:px-8 lg:px-12 relative overflow-hidden">
+      {/* Overlay Image */}
+      <div className="absolute top-0 left-0 w-full pointer-events-none z-0">
+        <img 
+          src="/Images/overlay.png" 
+          alt="Overlay" 
+          className="w-full h-auto"
+        />
+      </div>
+      <div className="w-full max-w-4xl mx-auto flex flex-col relative z-10">
         {/* Progress Header Section - At the top */}
         <div className="w-full mb-6 sm:mb-8">
           <ProgressHeader currentStep={1} totalSteps={2} />
@@ -209,12 +217,12 @@ export default function SignupPage() {
         </div>
 
         {/* Link Section */}
-        {/* <p className="mt-3 sm:mt-4 text-center text-xs sm:text-sm text-gray-400">
+        <p className="mt-3 sm:mt-4 text-center text-xs sm:text-sm text-gray-400">
           Already have an account?{' '}
           <Link href="/login" className="text-primary hover:text-primary-dark font-medium">
             Log In
           </Link>
-        </p> */}
+        </p>
       </div>
     </div>
   );
