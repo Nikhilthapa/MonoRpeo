@@ -24,13 +24,13 @@ export function HeroSection() {
           transparent for everyone involved.
         </p>
         <div className="hero-buttons-container">
-          <Link href="/signup" className="w-full sm:w-auto">
+          <Link href="/login" className="w-full sm:w-auto">
             <Button className="w-full sm:w-auto text-sm sm:text-base">
               Build your team
               <ArrowIcon size="sm" className="sm:w-5 sm:h-5" />
             </Button>
           </Link>
-          <Link href="/signup" className="w-full sm:w-auto">
+          <Link href="/login" className="w-full sm:w-auto">
             <Button
               variant="secondary"
               className="w-full sm:w-auto text-sm sm:text-base"

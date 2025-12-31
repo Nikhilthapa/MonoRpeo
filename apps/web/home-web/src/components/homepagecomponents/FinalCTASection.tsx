@@ -25,7 +25,7 @@ export function FinalCTASection() {
           Unlock smarter hiring, better talent, and rapid growth - all in one powerful platform.
         </p>
         <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center px-4">
-          <Link href="/signup" className="w-full sm:w-auto">
+          <Link href="/login" className="w-full sm:w-auto">
             <Button className="flex items-center justify-center gap-2 w-full sm:w-auto text-sm sm:text-base">
               Build Your Team
               <Icon size="sm" className="sm:w-5 sm:h-5">
@@ -33,7 +33,7 @@ export function FinalCTASection() {
               </Icon>
             </Button>
           </Link>
-          <Link href="/signup" className="w-full sm:w-auto">
+          <Link href="/login" className="w-full sm:w-auto">
             <Button
               variant="secondary"
               className="flex items-center justify-center gap-2 w-full sm:w-auto text-sm sm:text-base"
