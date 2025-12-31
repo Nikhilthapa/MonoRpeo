@@ -2,7 +2,9 @@
   "buildCommand": "npm run build:home-web",
   "outputDirectory": "apps/web/home-web/.next",
   "framework": "nextjs",
-  "installCommand": "pnpm install",
-  "devCommand": "npx nx dev home-web"
+  "installCommand": "npm install",
+
+  "devCommand": "npx nx dev home-web",
+  "startCommand": "npx nx start home-web"
 }
 
