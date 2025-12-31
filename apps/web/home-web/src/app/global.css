@@ -103,6 +103,36 @@ button, a {
   }
 }
 
+/* Signup page button styles */
+.signup-button {
+  border-radius: 30px;
+  background: var(--primary-colour, #7F5BFF);
+  padding: 20px 10px;
+  justify-content: center;
+  align-items: center;
+  gap: 10px;
+  color: var(--white-colour, #FCFCFC);
+  font-family: var(--font-space-grotesk), sans-serif;
+  font-size: 16px;
+  font-style: normal;
+  font-weight: 500;
+  line-height: normal;
+  display: flex;
+  transition: all 0.2s;
+  border: none;
+  cursor: pointer;
+  width: 100%;
+}
+
+.signup-button:hover {
+  opacity: 0.9;
+}
+
+.signup-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
 /* Google button styles */
 .google-button {
   display: flex;
@@ -1098,35 +1128,20 @@ html {
 .btn-primary {
   color: var(--white-colour, #FCFCFC);
   font-family: var(--font-space-grotesk), sans-serif;
-  font-size: 14px;
+  font-size: 16px;
   font-style: normal;
   font-weight: 500;
   line-height: normal;
-  border-radius: 30px;
+  border-radius: 12px;
   background: var(--primary-colour, #7F5BFF);
   display: flex;
-  padding: 16px 10px;
+  padding: 15px 30px;
   justify-content: center;
   align-items: center;
   gap: 10px;
   transition: all 0.2s;
   border: none;
   cursor: pointer;
-  width: 100%;
-}
-
-@media (min-width: 640px) {
-  .btn-primary {
-    font-size: 15px;
-    padding: 18px 10px;
-  }
-}
-
-@media (min-width: 1024px) {
-  .btn-primary {
-    font-size: 16px;
-    padding: 20px 10px;
-  }
 }
 
 .btn-primary:hover {
@@ -1206,8 +1221,8 @@ html {
 }
 
 @media (min-width: 1536px) {
-  .nav-menu-item svg {
-    margin-left: 12px;
+.nav-menu-item svg {
+  margin-left: 12px;
   }
 }
 

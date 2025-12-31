@@ -45,6 +45,28 @@ export default function SignupPage() {
     resolver: zodResolver(signupSchema),
   });
 
+  const handlePhoneInput = (e: React.ChangeEvent<HTMLInputElement>) => {
+    e.target.value = e.target.value.replace(/[^0-9]/g, '');
+  };
+
+  const handlePhoneKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    // Allow: backspace, delete, tab, escape, enter, and decimal point
+    if ([46, 8, 9, 27, 13, 110, 190].indexOf(e.keyCode) !== -1 ||
+      // Allow: Ctrl+A, Ctrl+C, Ctrl+V, Ctrl+X
+      (e.keyCode === 65 && e.ctrlKey === true) ||
+      (e.keyCode === 67 && e.ctrlKey === true) ||
+      (e.keyCode === 86 && e.ctrlKey === true) ||
+      (e.keyCode === 88 && e.ctrlKey === true) ||
+      // Allow: home, end, left, right
+      (e.keyCode >= 35 && e.keyCode <= 39)) {
+      return;
+    }
+    // Ensure that it is a number and stop the keypress
+    if ((e.shiftKey || (e.keyCode < 48 || e.keyCode > 57)) && (e.keyCode < 96 || e.keyCode > 105)) {
+      e.preventDefault();
+    }
+  };
+
   const onSubmit = async (data: SignupFormData) => {
     setIsSubmitting(true);
     setError(null);
@@ -122,7 +144,19 @@ export default function SignupPage() {
               label="Phone Number"
               type="tel"
               placeholder="Enter Your Phone Number"
-              {...register('phone')}
+              inputMode="numeric"
+              pattern="[0-9]*"
+              maxLength={15}
+              onKeyDown={handlePhoneKeyDown}
+              {...register('phone', {
+                onChange: (e) => {
+                  handlePhoneInput(e);
+                  // Limit to 15 digits
+                  if (e.target.value.length > 15) {
+                    e.target.value = e.target.value.slice(0, 15);
+                  }
+                }
+              })}
               error={errors.phone?.message}
             />
             <Input
@@ -151,7 +185,7 @@ export default function SignupPage() {
           </FormGrid>
 
           <div className="mt-4 sm:mt-6 lg:mt-[50px]">
-            <Button type="submit" disabled={isSubmitting}>
+            <Button type="submit" disabled={isSubmitting} className="signup-button">
               {isSubmitting ? 'Creating Account...' : 'SIGN UP NOW'}
             </Button>
           </div>
