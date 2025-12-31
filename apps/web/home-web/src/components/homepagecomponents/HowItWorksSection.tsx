@@ -664,7 +664,7 @@ export function HowItWorksSection() {
         </div>
 
         <div className="text-center px-4 mt-40 sm:mt-60">
-          <Link href="/signup">
+          <Link href="/login">
             <Button className="flex items-center justify-center gap-2 mx-auto w-full sm:w-auto text-sm sm:text-base">
               Build Your Team
               <ArrowIcon />
