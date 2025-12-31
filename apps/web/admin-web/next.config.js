@@ -10,6 +10,14 @@ const nextConfig = {
   // Use this to set Nx-specific options
   // See: https://nx.dev/recipes/next/next-config-setup
   nx: {},
+  // Disable static optimization to fix React 19 compatibility
+  // Admin panel requires dynamic rendering anyway
+  experimental: {
+    // This helps with React 19 compatibility
+    serverActions: {
+      bodySizeLimit: '2mb',
+    },
+  },
 };
 
 const plugins = [

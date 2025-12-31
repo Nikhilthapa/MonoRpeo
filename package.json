@@ -4,7 +4,7 @@
   "license": "MIT",
   "scripts": {
     "build:home-web": "nx build home-web --prod",
-    "build:admin-panel-web": "nx build admin-web --prod",
+    "build:admin-panel-web": "cross-env NODE_ENV=production nx build admin-web --prod",
     "build:all": "nx run-many --target=build --projects=home-web,admin-web --prod",
     "vercel:build:home-web": "nx build home-web --prod",
     "vercel:build:admin-panel-web": "nx build admin-web --prod",
