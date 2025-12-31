@@ -1,0 +1,7 @@
+{
+  "buildCommand": "npm run vercel:build:home-web",
+  "outputDirectory": "apps/web/home-web/.next",
+  "framework": "nextjs",
+  "installCommand": "npm install"
+}
+
