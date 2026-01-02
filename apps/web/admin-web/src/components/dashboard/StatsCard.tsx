@@ -1,5 +1,8 @@
+'use client';
+
 import React from 'react';
-import { subHeadingStyles, headingStyles } from '@/constants/styles';
+import { subHeadingStyles, headingStyles, COLORS } from '@/constants/styles';
+import { useMediaQuery } from '@/hooks/useMediaQuery';
 
 interface StatsCardProps {
   title: string;
@@ -8,23 +11,26 @@ interface StatsCardProps {
 }
 
 export function StatsCard({ title, value, icon }: StatsCardProps) {
+  const { isMobile } = useMediaQuery();
+  
   return (
     <div
       style={{
-        background: 'transparent',
+        background: COLORS.TRANSPARENT,
         borderRadius: '0.75rem',
         padding: '0.875rem 0.875rem',
-        border: '1px solid rgba(255, 255, 255, 0.1)',
+        border: `1px solid ${COLORS.BORDER_SECONDARY}`,
         transition: 'all 0.2s',
-        maxWidth: '350px',
+        maxWidth: isMobile ? '100%' : '350px',
+        width: '100%',
       }}
       onMouseEnter={(e) => {
-        e.currentTarget.style.background = 'rgba(255, 255, 255, 0.08)';
-        e.currentTarget.style.borderColor = 'rgba(139, 92, 246, 0.3)';
+        e.currentTarget.style.background = COLORS.OVERLAY_08;
+        e.currentTarget.style.borderColor = COLORS.BORDER_PRIMARY_OPACITY;
       }}
       onMouseLeave={(e) => {
-        e.currentTarget.style.background = 'rgba(255, 255, 255, 0.05)';
-        e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.1)';
+        e.currentTarget.style.background = COLORS.OVERLAY_05;
+        e.currentTarget.style.borderColor = COLORS.BORDER_SECONDARY;
       }}
     >
       <div
@@ -60,8 +66,8 @@ export function StatsCard({ title, value, icon }: StatsCardProps) {
               width: '40px',
               height: '40px',
               borderRadius: '100%',
-              background: 'rgba(139, 92, 246, 0.2)',
-              border: '1px solid rgba(139, 92, 246, 0.3)',
+              background: COLORS.PRIMARY_OVERLAY_20,
+              border: `1px solid ${COLORS.BORDER_PRIMARY_OPACITY}`,
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',

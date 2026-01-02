@@ -13,7 +13,10 @@ export function SidebarNav() {
         flexDirection: 'column',
         height: '100%',
         overflowY: 'auto',
+        scrollbarWidth: 'none',
+        msOverflowStyle: 'none',
       }}
+      className="sidebar-no-scrollbar"
     >
       {NAVIGATION_MENU.map((item, index) => {
         // Check if it's a section (has items property)

@@ -2,6 +2,8 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import { getSidebarIcon } from '../icons/SidebarIcons';
+import { COLORS } from '@/constants/styles';
 
 interface NavItemProps {
   label: string;
@@ -13,59 +15,48 @@ interface NavItemProps {
 export function NavItem({ label, href, icon, isActive }: NavItemProps) {
   const pathname = usePathname();
   const active = isActive ?? pathname === href;
+  const IconComponent = icon ? getSidebarIcon(icon) : null;
 
   return (
-    <Link
-      href={href}
-      style={{
-        display: 'flex',
-        alignItems: 'center',
-        gap: '0.75rem',
-        padding: '0.75rem 1rem',
-        borderRadius: '0.5rem',
-        textDecoration: 'none',
-        color: active ? '#ffffff' : '#9ca3af',
-        background: active ? 'rgba(139, 92, 246, 0.2)' : 'transparent',
-        border: active ? '1px solid rgba(139, 92, 246, 0.5)' : '1px solid transparent',
-        fontSize: '0.875rem',
-        fontWeight: active ? '500' : '400',
-        transition: 'all 0.2s',
-        cursor: 'pointer',
-      }}
+    <div style={{ marginBottom: '0.5rem' }}>
+      <Link
+        href={href}
+        style={{
+          display: 'flex',
+          alignItems: 'center',
+          gap: '0.75rem',
+          padding: '0.875rem 1rem',
+          borderRadius: active ? '8px' : '0.5rem',
+          textDecoration: 'none',
+          color: active ? COLORS.TEXT_PRIMARY : COLORS.TEXT_SECONDARY,
+          background: active ? COLORS.PRIMARY : COLORS.BG,
+          border: 'none',
+          fontSize: '0.75rem',
+          fontWeight: active ? '500' : '400',
+          fontFamily: '"Space Grotesk", sans-serif',
+          transition: 'all 0.2s',
+          cursor: 'pointer',
+          width: '100%',
+        }}
       onMouseEnter={(e) => {
         if (!active) {
-          e.currentTarget.style.background = 'rgba(255, 255, 255, 0.05)';
+          e.currentTarget.style.background = COLORS.OVERLAY_05;
         }
       }}
       onMouseLeave={(e) => {
         if (!active) {
-          e.currentTarget.style.background = 'transparent';
+          e.currentTarget.style.background = COLORS.BG;
         }
       }}
     >
-      {icon && (
-        <span style={{ fontSize: '1.125rem', display: 'flex', alignItems: 'center' }}>
-          {getIcon(icon)}
+      {IconComponent && (
+        <span style={{ fontSize: '1.125rem', display: 'flex', alignItems: 'center', flexShrink: 0 }}>
+          <IconComponent size={18} />
         </span>
       )}
-      <span>{label}</span>
-    </Link>
+      <span style={{ textAlign: 'left' }}>{label}</span>
+      </Link>
+    </div>
   );
-}
-
-// Simple icon renderer - can be replaced with lucide-react or similar later
-function getIcon(iconName: string): string {
-  const icons: Record<string, string> = {
-    dashboard: '📊',
-    briefcase: '💼',
-    building: '🏢',
-    users: '👥',
-    user: '👤',
-    calendar: '📅',
-    'bar-chart': '📈',
-    'file-text': '📄',
-    settings: '⚙️',
-  };
-  return icons[iconName] || '•';
 }
 

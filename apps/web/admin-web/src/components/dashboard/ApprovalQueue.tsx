@@ -1,7 +1,17 @@
 'use client';
 
 import { useState } from 'react';
-import Link from 'next/link';
+import { ClockIcon, PersonIcon } from '@/components/icons';
+import { SeeAllButton } from '@/components/common/SeeAllButton';
+import { ApproveButton } from '@/components/common/ApproveButton';
+import { RejectButton } from '@/components/common/RejectButton';
+import { ViewButton } from '@/components/common/ViewButton';
+import {
+  ConfirmRejectionDialogue,
+  ConfirmApprovalDialogue,
+} from '@/components/common/dialogue';
+import { COLORS } from '@/constants/styles';
+import { useMediaQuery } from '@/hooks/useMediaQuery';
 
 interface ApprovalItem {
   id: string;
@@ -14,15 +24,27 @@ interface ApprovalQueueProps {
   companies?: ApprovalItem[];
   jobs?: ApprovalItem[];
   vendors?: ApprovalItem[];
+  candidates?: ApprovalItem[];
 }
 
-export function ApprovalQueue({ companies = [], jobs = [], vendors = [] }: ApprovalQueueProps) {
-  const [activeTab, setActiveTab] = useState<'companies' | 'jobs' | 'vendors'>('companies');
+export function ApprovalQueue({ 
+  companies = [], 
+  jobs = [], 
+  vendors = [],
+  candidates = []
+}: ApprovalQueueProps) {
+  const [activeTab, setActiveTab] = useState<'companies' | 'jobs' | 'vendors' | 'candidates'>('companies');
+  const { isMobile, isSmallMobile } = useMediaQuery();
+  
+  // Dialogue state management
+  const [selectedItem, setSelectedItem] = useState<ApprovalItem | null>(null);
+  const [dialogueType, setDialogueType] = useState<'approve' | 'reject' | null>(null);
 
   const tabs = [
     { id: 'companies' as const, label: 'Companies', count: companies.length },
     { id: 'jobs' as const, label: 'Jobs', count: jobs.length },
     { id: 'vendors' as const, label: 'Vendors', count: vendors.length },
+    { id: 'candidates' as const, label: 'Candidate', count: candidates.length },
   ];
 
   const getCurrentItems = () => {
@@ -33,26 +55,89 @@ export function ApprovalQueue({ companies = [], jobs = [], vendors = [] }: Appro
         return jobs;
       case 'vendors':
         return vendors;
+      case 'candidates':
+        return candidates;
     }
   };
 
   const currentItems = getCurrentItems();
 
+  // Get entity type based on active tab
+  const getEntityType = (): string => {
+    switch (activeTab) {
+      case 'companies':
+        return 'company';
+      case 'jobs':
+        return 'job';
+      case 'vendors':
+        return 'vendor';
+      case 'candidates':
+        return 'candidate';
+      default:
+        return 'item';
+    }
+  };
+
+  // Handlers for button clicks
+  const handleApproveClick = (item: ApprovalItem) => {
+    setSelectedItem(item);
+    setDialogueType('approve');
+  };
+
+  const handleRejectClick = (item: ApprovalItem) => {
+    setSelectedItem(item);
+    setDialogueType('reject');
+  };
+
+  const handleViewClick = (item: ApprovalItem) => {
+    // For view, you might want to navigate to a detail page or show a view dialogue
+    // For now, we'll just log it - you can customize this behavior
+    console.log('View item:', item);
+  };
+
+  // Dialogue confirmation handlers
+  const handleApproveConfirm = () => {
+    if (selectedItem) {
+      // Handle approval logic here
+      console.log('Approved:', selectedItem);
+      // You can add API call here
+    }
+    setSelectedItem(null);
+    setDialogueType(null);
+  };
+
+  const handleRejectConfirm = () => {
+    if (selectedItem) {
+      // Handle rejection logic here
+      console.log('Rejected:', selectedItem);
+      // You can add API call here
+    }
+    setSelectedItem(null);
+    setDialogueType(null);
+  };
+
+  const handleDialogueClose = () => {
+    setSelectedItem(null);
+    setDialogueType(null);
+  };
+
   return (
     <div
       style={{
-        background: 'rgba(255, 255, 255, 0.05)',
+        background: COLORS.SEC_BG,
         borderRadius: '0.75rem',
-        padding: '1.5rem',
-        border: '1px solid rgba(255, 255, 255, 0.1)',
+        padding: isSmallMobile ? '0.75rem' : (isMobile ? '1rem' : '1.5rem'),
+        border: 'none',
+        overflow: 'hidden',
       }}
     >
       <h2
         style={{
-          color: '#ffffff',
+          color: COLORS.TEXT_PRIMARY,
           fontSize: '1.25rem',
           fontWeight: '600',
-          margin: '0 0 1.5rem 0',
+          marginBottom: '0.75rem',
+          fontFamily: '"Space Grotesk", sans-serif',
         }}
       >
         Approval Queue
@@ -61,32 +146,49 @@ export function ApprovalQueue({ companies = [], jobs = [], vendors = [] }: Appro
       {/* Tabs */}
       <div
         style={{
-          display: 'flex',
-          gap: '0.5rem',
+          background: COLORS.BG,
+          display: 'inline-block',
+          borderRadius: '9999px',
+          padding: '0.5rem',
           marginBottom: '1.5rem',
-          borderBottom: '1px solid rgba(255, 255, 255, 0.1)',
+          width: isMobile ? '100%' : 'auto',
         }}
       >
-        {tabs.map((tab) => (
-          <button
-            key={tab.id}
-            onClick={() => setActiveTab(tab.id)}
-            style={{
-              padding: '0.75rem 1.5rem',
-              background: activeTab === tab.id ? 'rgba(139, 92, 246, 0.2)' : 'transparent',
-              border: 'none',
-              borderBottom:
-                activeTab === tab.id ? '2px solid #8b5cf6' : '2px solid transparent',
-              color: activeTab === tab.id ? '#ffffff' : '#9ca3af',
-              fontSize: '0.875rem',
-              fontWeight: activeTab === tab.id ? '500' : '400',
-              cursor: 'pointer',
-              transition: 'all 0.2s',
-            }}
-          >
-            {tab.label} ({tab.count})
-          </button>
-        ))}
+        <div
+          style={{
+            display: 'flex',
+            flexWrap: 'nowrap',
+            gap: '0.5rem',
+            overflowX: isMobile ? 'auto' : 'visible',
+            overflowY: 'hidden',
+            scrollbarWidth: 'none',
+            msOverflowStyle: 'none',
+          }}
+          className="sidebar-no-scrollbar"
+        >
+          {tabs.map((tab) => (
+            <button
+              key={tab.id}
+              onClick={() => setActiveTab(tab.id)}
+              style={{
+                padding: isSmallMobile ? '0.5rem 1rem' : '0.75rem 1.5rem',
+                background: activeTab === tab.id ? COLORS.PRIMARY : 'transparent',
+                border: 'none',
+                borderRadius: '9999px',
+                color: COLORS.TEXT_PRIMARY,
+                fontSize: isSmallMobile ? '0.75rem' : '0.875rem',
+                fontWeight: activeTab === tab.id ? '600' : '500',
+                cursor: 'pointer',
+                transition: 'all 0.2s',
+                fontFamily: '"Space Grotesk", sans-serif',
+                whiteSpace: 'nowrap',
+                flexShrink: 0,
+              }}
+            >
+              {tab.label}({tab.count})
+            </button>
+          ))}
+        </div>
       </div>
 
       {/* Items List */}
@@ -94,7 +196,7 @@ export function ApprovalQueue({ companies = [], jobs = [], vendors = [] }: Appro
         style={{
           display: 'flex',
           flexDirection: 'column',
-          gap: '1rem',
+          gap: '1.5rem',
           marginBottom: '1.5rem',
         }}
       >
@@ -104,89 +206,65 @@ export function ApprovalQueue({ companies = [], jobs = [], vendors = [] }: Appro
               key={item.id}
               style={{
                 display: 'flex',
-                alignItems: 'center',
+                alignItems: isMobile ? 'flex-start' : 'center',
                 justifyContent: 'space-between',
-                padding: '1rem',
-                background: 'rgba(255, 255, 255, 0.03)',
+                padding: isSmallMobile ? '0.75rem' : '1rem',
+                background: COLORS.BG,
                 borderRadius: '0.5rem',
-                border: '1px solid rgba(255, 255, 255, 0.05)',
+                border: `1px solid ${COLORS.BORDER_TERTIARY}`,
+                flexDirection: isMobile ? 'column' : 'row',
+                gap: isMobile ? '1rem' : '0',
+                overflow: 'hidden',
               }}
             >
-              <div>
+              <div style={{ flex: 1, width: '100%', minWidth: 0 }}>
                 <div
                   style={{
-                    color: '#ffffff',
-                    fontSize: '0.875rem',
-                    fontWeight: '500',
-                    marginBottom: '0.25rem',
+                    color: COLORS.TEXT_PRIMARY,
+                    fontSize: isSmallMobile ? '0.8125rem' : '0.875rem',
+                    fontWeight: '600',
+                    marginBottom: '0.5rem',
+                    wordBreak: 'break-word',
+                    overflowWrap: 'break-word',
                   }}
                 >
                   {item.name}
                 </div>
                 <div
                   style={{
-                    color: '#9ca3af',
-                    fontSize: '0.75rem',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '0.375rem',
+                    color: COLORS.TEXT_SECONDARY,
+                    fontSize: isSmallMobile ? '0.75rem' : '0.875rem',
+                    fontFamily: '"Space Grotesk", sans-serif',
+                    flexWrap: 'wrap',
                   }}
                 >
-                  {item.timeAgo} By {item.submittedBy}
+                  <ClockIcon width={isSmallMobile ? 16 : 20} height={isSmallMobile ? 16 : 20} color={COLORS.TEXT_SECONDARY} />
+                  <span >{item.timeAgo}</span>
+                  <PersonIcon width={isSmallMobile ? 16 : 20} height={isSmallMobile ? 16 : 20} color={COLORS.TEXT_SECONDARY} />
+                  <span>By {item.submittedBy}</span>
                 </div>
               </div>
               <div
-                style={{
+                style={{  
                   display: 'flex',
-                  gap: '0.5rem',
+                  gap: isSmallMobile ? '0.375rem' : '0.5rem',
+                  flexWrap: isMobile ? 'wrap' : 'nowrap',
+                  width: isMobile ? '100%' : 'auto',
                 }}
               >
-                <button
-                  style={{
-                    padding: '0.5rem 1rem',
-                    borderRadius: '0.375rem',
-                    background: 'rgba(34, 197, 94, 0.2)',
-                    border: '1px solid rgba(34, 197, 94, 0.5)',
-                    color: '#4ade80',
-                    fontSize: '0.75rem',
-                    fontWeight: '500',
-                    cursor: 'pointer',
-                  }}
-                >
-                  Approve
-                </button>
-                <button
-                  style={{
-                    padding: '0.5rem 1rem',
-                    borderRadius: '0.375rem',
-                    background: 'rgba(239, 68, 68, 0.2)',
-                    border: '1px solid rgba(239, 68, 68, 0.5)',
-                    color: '#fca5a5',
-                    fontSize: '0.75rem',
-                    fontWeight: '500',
-                    cursor: 'pointer',
-                  }}
-                >
-                  Reject
-                </button>
-                <button
-                  style={{
-                    padding: '0.5rem 1rem',
-                    borderRadius: '0.375rem',
-                    background: 'rgba(139, 92, 246, 0.2)',
-                    border: '1px solid rgba(139, 92, 246, 0.5)',
-                    color: '#a78bfa',
-                    fontSize: '0.75rem',
-                    fontWeight: '500',
-                    cursor: 'pointer',
-                  }}
-                >
-                  View
-                </button>
+                <ApproveButton onClick={() => handleApproveClick(item)} />
+                <RejectButton onClick={() => handleRejectClick(item)} />
+                <ViewButton onClick={() => handleViewClick(item)} />
               </div>
             </div>
           ))
         ) : (
           <div
             style={{
-              color: '#9ca3af',
+              color: COLORS.TEXT_SECONDARY,
               fontSize: '0.875rem',
               textAlign: 'center',
               padding: '2rem',
@@ -198,35 +276,41 @@ export function ApprovalQueue({ companies = [], jobs = [], vendors = [] }: Appro
       </div>
 
       {/* See All Link */}
-      <Link
+      <SeeAllButton
         href={
           activeTab === 'companies'
             ? '/company-management/pending-approvals'
             : activeTab === 'jobs'
               ? '/job-management/pending-jobs'
-              : '/vendor-management/pending-approvals'
+              : activeTab === 'vendors'
+                ? '/vendor-management/pending-approvals'
+                : '/candidate-management/pending-candidates'
         }
-        style={{
-          display: 'inline-block',
-          padding: '0.75rem 1.5rem',
-          borderRadius: '0.5rem',
-          background: 'rgba(139, 92, 246, 0.2)',
-          border: '1px solid rgba(139, 92, 246, 0.5)',
-          color: '#a78bfa',
-          textDecoration: 'none',
-          fontSize: '0.875rem',
-          fontWeight: '500',
-          transition: 'all 0.2s',
-        }}
-        onMouseEnter={(e) => {
-          e.currentTarget.style.background = 'rgba(139, 92, 246, 0.3)';
-        }}
-        onMouseLeave={(e) => {
-          e.currentTarget.style.background = 'rgba(139, 92, 246, 0.2)';
-        }}
-      >
-        See all {activeTab}
-      </Link>
+        text={`See all ${activeTab}`}
+      />
+
+      {/* Dialogue Boxes */}
+      {selectedItem && (
+        <>
+          {/* Approval Dialogue */}
+          <ConfirmApprovalDialogue
+            isOpen={dialogueType === 'approve'}
+            onClose={handleDialogueClose}
+            entityName={selectedItem.name}
+            entityType={getEntityType()}
+            onConfirm={handleApproveConfirm}
+          />
+
+          {/* Rejection Dialogue */}
+          <ConfirmRejectionDialogue
+            isOpen={dialogueType === 'reject'}
+            onClose={handleDialogueClose}
+            entityName={selectedItem.name}
+            entityType={getEntityType()}
+            onConfirm={handleRejectConfirm}
+          />
+        </>
+      )}
     </div>
   );
 }

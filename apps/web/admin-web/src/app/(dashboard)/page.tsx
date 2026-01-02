@@ -2,7 +2,9 @@
 
 import { StatsCard } from '@/components/dashboard/StatsCard';
 import { ApprovalQueue } from '@/components/dashboard/ApprovalQueue';
+import { RecentActivity } from '@/components/dashboard/RecentActivity';
 import { WelcomeSection } from '@/components/dashboard/WelcomeSection';
+import { useMediaQuery } from '@/hooks/useMediaQuery';
 import {
   CompanyIcon,
   JobIcon,
@@ -16,6 +18,8 @@ import {
 export const dynamic = 'force-dynamic';
 
 export default function DashboardPage() {
+  const { isMobile, isTablet, isSmallMobile } = useMediaQuery();
+
   // Mock data - replace with actual API calls
   const stats = [
     { title: 'Pending Company Approvals', value: '05', icon: <CompanyIcon width={20} height={20} /> },
@@ -42,16 +46,31 @@ export default function DashboardPage() {
     { id: '2', name: 'TalentSource', timeAgo: '1 Hour Ago', submittedBy: 'Charlie Wilson' },
   ];
 
+  // Determine grid columns based on screen size
+  const getGridColumns = () => {
+    if (isMobile) return '1fr';
+    if (isTablet) return 'repeat(2, 1fr)';
+    return 'repeat(3, 1fr)';
+  };
+
+  // Determine gap based on screen size
+  const getGap = () => {
+    if (isSmallMobile) return '0.5rem';
+    if (isMobile) return '0.75rem';
+    if (isTablet) return '1rem';
+    return '1.5rem';
+  };
+
   return (
     <div>
       <WelcomeSection />
 
-      {/* Stats Cards - 2x3 Grid */}
+      {/* Stats Cards - Responsive Grid */}
       <div
         style={{
           display: 'grid',
-          gridTemplateColumns: 'repeat(3, 1fr)',
-          gap: '1.5rem',
+          gridTemplateColumns: getGridColumns(),
+          gap: getGap(),
           marginBottom: '2rem',
         }}
       >
@@ -66,6 +85,9 @@ export default function DashboardPage() {
         jobs={approvalJobs}
         vendors={approvalVendors}
       />
+
+      {/* Recent Activity - Full Width */}
+      <RecentActivity />
     </div>
   );
 }

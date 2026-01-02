@@ -1,8 +1,14 @@
-import Link from 'next/link';
+'use client';
+
+import { SeeAllButton } from '@/components/common/SeeAllButton';
+import { COLORS } from '@/constants/styles';
+import { useMediaQuery } from '@/hooks/useMediaQuery';
 
 interface ActivityItem {
   id: string;
-  message: string;
+  action: string;
+  entity: string;
+  admin: string;
   timeAgo: string;
 }
 
@@ -11,15 +17,13 @@ interface RecentActivityProps {
 }
 
 export function RecentActivity({ activities = [] }: RecentActivityProps) {
+  const { isMobile, isSmallMobile } = useMediaQuery();
+  
   const defaultActivities: ActivityItem[] = [
-    { id: '1', message: 'Company approved CloudScale Systems', timeAgo: '20 Minutes ago' },
-    { id: '2', message: 'Job rejected: Junior Developer', timeAgo: '20 Minutes ago' },
-    { id: '3', message: 'Vendor suspended QuickHire Inc', timeAgo: '1 Hour ago' },
-    {
-      id: '4',
-      message: 'Candidate shortlisted Ankit Kumar for Backend Dev',
-      timeAgo: '2 Hours ago',
-    },
+    { id: '1', action: 'Company approved', entity: 'CloudScale Systems', admin: 'Admin Rahul', timeAgo: '10 Minutes Ago' },
+    { id: '2', action: 'Job rejected', entity: 'Junior Developer', admin: 'Admin Priya', timeAgo: '25 Minutes Ago' },
+    { id: '3', action: 'Vendor suspended', entity: 'QuickHire Inc', admin: 'Admin Rahul', timeAgo: '1 Hour Ago' },
+    { id: '4', action: 'Candidate shortlisted', entity: 'Amit Kumar for Backend Dev', admin: 'Admin Sarah', timeAgo: '2 Hours Ago' },
   ];
 
   const displayActivities = activities.length > 0 ? activities : defaultActivities;
@@ -27,32 +31,40 @@ export function RecentActivity({ activities = [] }: RecentActivityProps) {
   return (
     <div
       style={{
-        background: 'rgba(255, 255, 255, 0.05)',
+        background: COLORS.SEC_BG,
         borderRadius: '0.75rem',
-        padding: '1.5rem',
-        border: '1px solid rgba(255, 255, 255, 0.1)',
+        padding: isSmallMobile ? '0.75rem' : (isMobile ? '1rem' : '1.5rem'),
+        border: 'none',
+        marginTop: isSmallMobile ? '1rem' : (isMobile ? '1.5rem' : '2rem'),
+        overflow: 'hidden',
       }}
     >
-      <h2
-        style={{
-          color: '#ffffff',
-          fontSize: '1.25rem',
-          fontWeight: '600',
-          margin: '0 0 0.5rem 0',
-        }}
-      >
-        Recent Activity
-      </h2>
-      <p
-        style={{
-          color: '#9ca3af',
-          fontSize: '0.875rem',
-          margin: '0 0 1.5rem 0',
-        }}
-      >
-        Stay Updated With All Submissions, Status Changes, And Interview Events.
-      </p>
+      {/* Title and Subtitle */}
+      <div style={{ marginBottom: '1.5rem' }}>
+        <h2
+          style={{
+            color: COLORS.TEXT_PRIMARY,
+            fontSize: '1.25rem',
+            fontWeight: '600',
+            marginBottom: '0.5rem',
+            fontFamily: '"Space Grotesk", sans-serif',
+          }}
+        >
+          Recent Activity
+        </h2>
+        <p
+          style={{
+            color: COLORS.TEXT_SECONDARY,
+            fontSize: '0.875rem',
+            margin: 0,
+            fontFamily: '"Space Grotesk", sans-serif',
+          }}
+        >
+          Stay Updated With All Submissions, Status Changes, And Interview Events.
+        </p>
+      </div>
 
+      {/* Activity Cards */}
       <div
         style={{
           display: 'flex',
@@ -65,57 +77,52 @@ export function RecentActivity({ activities = [] }: RecentActivityProps) {
           <div
             key={activity.id}
             style={{
-              padding: '1rem',
-              background: 'rgba(255, 255, 255, 0.03)',
+              padding: '0.75rem 1rem',
+              background: COLORS.BG,
               borderRadius: '0.5rem',
-              border: '1px solid rgba(255, 255, 255, 0.05)',
+              border: `1px solid ${COLORS.BORDER_TERTIARY}`,
+              borderLeft: `7px solid ${COLORS.PRIMARY}`,
             }}
           >
+            {/* Main Activity Text */}
             <div
               style={{
-                color: '#ffffff',
-                fontSize: '0.875rem',
-                marginBottom: '0.25rem',
+                color: COLORS.TEXT_PRIMARY,
+                fontFamily: '"Space Grotesk", sans-serif',
+                fontSize: isSmallMobile ? '14px' : '16px',
+                fontStyle: 'normal',
+                fontWeight: '700',
+                lineHeight: 'normal',
+                marginBottom: '0.375rem',
+                wordBreak: 'break-word',
+                overflowWrap: 'break-word',
               }}
             >
-              {activity.message}
+              {activity.action}: {activity.entity}
             </div>
+            
+            {/* Metadata */}
             <div
               style={{
-                color: '#9ca3af',
-                fontSize: '0.75rem',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '0.375rem',
+                color: COLORS.TEXT_SECONDARY,
+                fontSize: isSmallMobile ? '11px' : '12px',
+                fontFamily: '"Space Grotesk", sans-serif',
+                flexWrap: 'wrap',
               }}
             >
-              {activity.timeAgo}
+              <span>{activity.admin}</span>
+              <span>•</span>
+              <span>{activity.timeAgo}</span>
             </div>
           </div>
         ))}
       </div>
 
-      <Link
-        href="/activity-logs"
-        style={{
-          display: 'inline-block',
-          padding: '0.75rem 1.5rem',
-          borderRadius: '0.5rem',
-          background: 'rgba(139, 92, 246, 0.2)',
-          border: '1px solid rgba(139, 92, 246, 0.5)',
-          color: '#a78bfa',
-          textDecoration: 'none',
-          fontSize: '0.875rem',
-          fontWeight: '500',
-          transition: 'all 0.2s',
-        }}
-        onMouseEnter={(e) => {
-          e.currentTarget.style.background = 'rgba(139, 92, 246, 0.3)';
-        }}
-        onMouseLeave={(e) => {
-          e.currentTarget.style.background = 'rgba(139, 92, 246, 0.2)';
-        }}
-      >
-        See all recent activity
-      </Link>
+      {/* See All Link */}
+      <SeeAllButton href="/activity-logs" text="See all recent activity" style={{ marginTop: 0 }} />
     </div>
   );
 }
-
