@@ -1,3 +1,8 @@
+:root {
+  --second-shade: #ccc;
+  --white-colour: #fcfcfc;
+}
+
 html {
   -webkit-text-size-adjust: 100%;
   font-family:
@@ -18,6 +23,18 @@ html {
   line-height: 1.5;
   tab-size: 4;
   scroll-behavior: smooth;
+}
+
+/* Placeholder styles for all inputs */
+input::placeholder,
+textarea::placeholder {
+  color: var(--second-shade, #ccc);
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 16px;
+  font-style: normal;
+  font-weight: 500;
+  line-height: normal;
+  text-transform: capitalize;
 }
 body {
   font-family: inherit;
@@ -488,6 +505,17 @@ summary svg {
   display: inline;
   margin-top: -0.25rem;
 }
+
+/* Hide scrollbar completely for sidebar */
+.sidebar-no-scrollbar {
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* IE and Edge */
+}
+
+.sidebar-no-scrollbar::-webkit-scrollbar {
+  display: none; /* Chrome, Safari, Opera */
+}
+
 @media screen and (min-width: 768px) {
   #hero {
     grid-template-columns: repeat(2, minmax(0, 1fr));

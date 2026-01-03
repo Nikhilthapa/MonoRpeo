@@ -9,6 +9,7 @@
     "moduleResolution": "bundler",
     "resolveJsonModule": true,
     "lib": ["dom", "dom.iterable", "esnext"],
+    "types": ["react", "react-dom"],
     "allowJs": true,
     "allowSyntheticDefaultImports": true,
     "forceConsistentCasingInFileNames": true,
