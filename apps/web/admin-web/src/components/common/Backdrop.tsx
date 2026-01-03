@@ -1,7 +1,5 @@
 'use client';
 
-import { COLORS } from '@/constants/styles';
-
 interface BackdropProps {
   isOpen: boolean;
   onClick: () => void;
