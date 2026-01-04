@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import Link from 'next/link';
+// import Link from 'next/link';
 import { post } from '@/lib/api';
 import { setTempUser } from '@/lib/auth';
 import { Logo } from '@/components/ui/Logo';
@@ -217,12 +217,12 @@ export default function SignupPage() {
         </div>
 
         {/* Link Section */}
-        <p className="mt-3 sm:mt-4 text-center text-xs sm:text-sm text-gray-400">
+        {/* <p className="mt-3 sm:mt-4 text-center text-xs sm:text-sm text-gray-400">
           Already have an account?{' '}
           <Link href="/login" className="text-primary hover:text-primary-dark font-medium">
             Log In
           </Link>
-        </p>
+        </p> */}
       </div>
     </div>
   );

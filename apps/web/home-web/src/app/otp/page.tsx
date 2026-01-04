@@ -2,7 +2,6 @@
 
 import { useState, useRef, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import Link from 'next/link';
 import { post } from '@/lib/api';
 import { getTempUser, clearTempUser, setStoredUser } from '@/lib/auth';
 import { Logo } from '@/components/ui/Logo';
@@ -207,7 +206,6 @@ export default function OTPPage() {
               )}
             </p>
           </div>
-        </div>
       </div>
     </div>
   );
