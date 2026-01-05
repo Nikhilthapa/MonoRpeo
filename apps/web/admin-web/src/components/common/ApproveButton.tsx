@@ -24,11 +24,11 @@ export function ApproveButton({
   return (
     <ActionButton
       text={text}
-      icon={<CheckIcon width={14} height={14} color={COLORS.TEXT_PRIMARY} />}
+      icon={<CheckIcon width={14} height={14} color={COLORS.SUCCESS} />}
       onClick={onClick}
       background={COLORS.SUCCESS_BG}
       hoverBackground={COLORS.SUCCESS_BG}
-      color={COLORS.TEXT_PRIMARY}
+      color={COLORS.SUCCESS}
       className={className}
       style={style}
     />

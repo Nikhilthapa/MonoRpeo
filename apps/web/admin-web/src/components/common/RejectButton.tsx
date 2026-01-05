@@ -24,11 +24,11 @@ export function RejectButton({
   return (
     <ActionButton
       text={text}
-      icon={<XIcon width={14} height={14} color={COLORS.TEXT_PRIMARY} />}
+      icon={<XIcon width={14} height={14} color={COLORS.ERROR} />}
       onClick={onClick}
       background={COLORS.ERROR_BG_REJECTED}
       hoverBackground={COLORS.ERROR_BG_REJECTED}
-      color={COLORS.TEXT_PRIMARY}
+      color={COLORS.ERROR}
       className={className}
       style={style}
     />
