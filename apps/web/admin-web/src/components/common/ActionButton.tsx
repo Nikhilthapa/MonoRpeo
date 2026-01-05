@@ -37,6 +37,12 @@ export function ActionButton({
     <button
       className={className}
       onClick={onClick}
+      onFocus={(e) => {
+        e.currentTarget.style.outline = 'none';
+      }}
+      onBlur={(e) => {
+        e.currentTarget.style.outline = 'none';
+      }}
       style={{
         display: 'flex',
         alignItems: 'center',
@@ -47,6 +53,7 @@ export function ActionButton({
         borderRadius: '0.375rem',
         background: background || COLORS.SEC_BG,
         border: border || 'none',
+        outline: 'none',
         color: color,
         fontSize: isSmallMobile ? '0.6875rem' : '0.75rem',
         fontWeight: '500',

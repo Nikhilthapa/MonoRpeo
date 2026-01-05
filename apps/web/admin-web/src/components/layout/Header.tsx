@@ -126,6 +126,14 @@ export function Header({ onMenuClick }: HeaderProps) {
               maxWidth: '100%',
             }}
           >
+            <style dangerouslySetInnerHTML={{
+              __html: `
+                input[placeholder="Search Job"]::placeholder {
+                  color: rgba(255, 255, 255, 0.3) !important;
+                  opacity: 1;
+                }
+              `
+            }} />
             <input
               type="text"
               placeholder="Search Job"
@@ -135,17 +143,18 @@ export function Header({ onMenuClick }: HeaderProps) {
                 padding: isSmallMobile ? '0.5rem 0.75rem 0.5rem 2.25rem' : '0.625rem 1rem 0.625rem 2.5rem',
                 borderRadius: '0.5rem',
                 background: COLORS.TRANSPARENT,
-                border: `1px solid ${COLORS.BORDER_PRIMARY}`,
+                border: `1px solid ${COLORS.BORDER_SECONDARY}`,
                 color: COLORS.TEXT_PRIMARY,
                 fontSize: isSmallMobile ? '0.8125rem' : '0.875rem',
                 outline: 'none',
                 boxSizing: 'border-box',
+                transition: 'border 0.2s ease',
               }}
               onFocus={(e) => {
-                e.currentTarget.style.borderColor = COLORS.BORDER_PRIMARY;
+                e.currentTarget.style.border = `2px solid ${COLORS.BORDER_PRIMARY}`;
               }}
               onBlur={(e) => {
-                e.currentTarget.style.borderColor = COLORS.BORDER_PRIMARY;
+                e.currentTarget.style.border = `1px solid ${COLORS.BORDER_SECONDARY}`;
               }}
             />
             <span
@@ -227,17 +236,18 @@ export function Header({ onMenuClick }: HeaderProps) {
                 padding: '0.625rem 1rem 0.625rem 2.5rem',
                 borderRadius: '0.5rem',
                 background: COLORS.TRANSPARENT,
-                border: `1px solid ${COLORS.BORDER_PRIMARY}`,
+                border: `1px solid ${COLORS.BORDER_SECONDARY}`,
                 color: COLORS.TEXT_PRIMARY,
                 fontSize: '0.875rem',
                 outline: 'none',
                 boxSizing: 'border-box',
+                transition: 'border 0.2s ease',
               }}
               onFocus={(e) => {
-                e.currentTarget.style.borderColor = COLORS.BORDER_PRIMARY;
+                e.currentTarget.style.border = `2px solid ${COLORS.BORDER_PRIMARY}`;
               }}
               onBlur={(e) => {
-                e.currentTarget.style.borderColor = COLORS.BORDER_PRIMARY;
+                e.currentTarget.style.border = `1px solid ${COLORS.BORDER_SECONDARY}`;
               }}
             />
             <span

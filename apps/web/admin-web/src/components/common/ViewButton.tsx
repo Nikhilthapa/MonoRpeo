@@ -28,7 +28,7 @@ export function ViewButton({
       onClick={onClick}
       background={COLORS.SEC_BG}
       hoverBackground={COLORS.SEC_BG}
-      border={`1px solid ${COLORS.BORDER_SECONDARY}`}
+      border="none"
       color={COLORS.TEXT_PRIMARY}
       className={className}
       style={style}

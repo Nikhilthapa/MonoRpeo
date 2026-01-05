@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { ClockIcon, PersonIcon } from '@/components/icons';
 import { SeeAllButton } from '@/components/common/SeeAllButton';
 import { ApproveButton } from '@/components/common/ApproveButton';
@@ -33,6 +34,7 @@ export function ApprovalQueue({
   vendors = [],
   candidates = []
 }: ApprovalQueueProps) {
+  const router = useRouter();
   const [activeTab, setActiveTab] = useState<'companies' | 'jobs' | 'vendors' | 'candidates'>('companies');
   const { isMobile, isSmallMobile } = useMediaQuery();
   
@@ -90,9 +92,16 @@ export function ApprovalQueue({
   };
 
   const handleViewClick = (item: ApprovalItem) => {
-    // For view, you might want to navigate to a detail page or show a view dialogue
-    // For now, we'll just log it - you can customize this behavior
-    console.log('View item:', item);
+    // Navigate to respective view pages based on active tab
+    if (activeTab === 'companies') {
+      router.push(`/company-management/view/${item.id}`);
+    } else if (activeTab === 'jobs') {
+      router.push(`/job-management/view/${item.id}`);
+    } else {
+      // For other tabs, you might want to navigate to their respective detail pages
+      // For now, we'll just log it - you can customize this behavior
+      console.log('View item:', item);
+    }
   };
 
   // Dialogue confirmation handlers

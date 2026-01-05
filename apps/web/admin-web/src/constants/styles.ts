@@ -156,3 +156,28 @@ export const subHeadingStyles = {
   textTransform: SUB_HEADING_STYLES.textTransform,
 };
 
+/**
+ * Basic information description styles
+ * Used for company description text in BasicInformationCard
+ */
+export const BASIC_INFO_DESCRIPTION_STYLES = {
+  color: 'var(--white-colour, #FCFCFC)',
+  fontFamily: '"Space Grotesk"',
+  fontSize: '14px',
+  fontStyle: 'normal',
+  fontWeight: '500',
+  lineHeight: '20px', // 125%
+} as const;
+
+/**
+ * CSS styles object for basic info description (React style prop)
+ */
+export const basicInfoDescriptionStyles = {
+  color: BASIC_INFO_DESCRIPTION_STYLES.color,
+  fontFamily: BASIC_INFO_DESCRIPTION_STYLES.fontFamily,
+  fontSize: BASIC_INFO_DESCRIPTION_STYLES.fontSize,
+  fontStyle: BASIC_INFO_DESCRIPTION_STYLES.fontStyle,
+  fontWeight: BASIC_INFO_DESCRIPTION_STYLES.fontWeight,
+  lineHeight: BASIC_INFO_DESCRIPTION_STYLES.lineHeight,
+};
+

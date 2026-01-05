@@ -39,13 +39,16 @@ export function NavItem({ label, href, icon, isActive }: NavItemProps) {
           width: '100%',
         }}
       onMouseEnter={(e) => {
-        if (!active) {
-          e.currentTarget.style.background = COLORS.OVERLAY_05;
-        }
+        e.currentTarget.style.background = COLORS.PRIMARY;
+        e.currentTarget.style.color = COLORS.TEXT_PRIMARY;
       }}
       onMouseLeave={(e) => {
-        if (!active) {
+        if (active) {
+          e.currentTarget.style.background = COLORS.PRIMARY;
+          e.currentTarget.style.color = COLORS.TEXT_PRIMARY;
+        } else {
           e.currentTarget.style.background = COLORS.BG;
+          e.currentTarget.style.color = COLORS.TEXT_SECONDARY;
         }
       }}
     >

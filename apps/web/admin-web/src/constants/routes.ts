@@ -22,6 +22,7 @@ export const ROUTES = {
     ALL_COMPANIES: '/company-management/all-companies',
     PENDING_APPROVALS: '/company-management/pending-approvals',
     REJECTED_SUSPENDED: '/company-management/rejected-suspended',
+    VIEW: '/company-management/view/[id]',
   },
 
   // Job Management
@@ -29,6 +30,7 @@ export const ROUTES = {
     PENDING_JOBS: '/job-management/pending-jobs',
     ACTIVE_JOBS: '/job-management/active-jobs',
     CLOSED_REJECTED: '/job-management/closed-rejected',
+    VIEW: '/job-management/view/[id]',
   },
 
   // Vendor Management

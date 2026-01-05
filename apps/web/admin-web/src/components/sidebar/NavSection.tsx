@@ -41,18 +41,16 @@ export function NavSection({ section }: NavSectionProps) {
           textAlign: 'left',
         }}
         onMouseEnter={(e) => {
-          if (!hasActiveChild) {
-            e.currentTarget.style.background = COLORS.OVERLAY_05;
-            e.currentTarget.style.color = COLORS.TEXT_PRIMARY;
-          }
+          e.currentTarget.style.background = COLORS.PRIMARY;
+          e.currentTarget.style.color = COLORS.TEXT_PRIMARY;
         }}
         onMouseLeave={(e) => {
-          if (!hasActiveChild) {
-            e.currentTarget.style.background = COLORS.BG;
-            e.currentTarget.style.color = COLORS.TEXT_SECONDARY;
-          } else {
+          if (hasActiveChild) {
             e.currentTarget.style.background = COLORS.PRIMARY;
             e.currentTarget.style.color = COLORS.TEXT_PRIMARY;
+          } else {
+            e.currentTarget.style.background = COLORS.BG;
+            e.currentTarget.style.color = COLORS.TEXT_SECONDARY;
           }
         }}
       >
