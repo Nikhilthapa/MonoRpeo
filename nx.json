@@ -9,14 +9,12 @@
     ],
     "sharedGlobals": ["{workspaceRoot}/.github/workflows/ci.yml"]
   },
-  "nxCloudId": "694fc6271681f158d4fdbe5d",
+  "nxCloudId": "695b55649cdc1b163cd45e79",
   "plugins": [
     {
       "plugin": "@nx/js/typescript",
       "options": {
-        "typecheck": {
-          "targetName": "typecheck"
-        },
+        "typecheck": { "targetName": "typecheck" },
         "build": {
           "targetName": "build",
           "configName": "tsconfig.lib.json",
@@ -37,20 +35,11 @@
         "serveStaticTargetName": "serve-static"
       }
     },
-    {
-      "plugin": "@nx/eslint/plugin",
-      "options": {
-        "targetName": "lint"
-      }
-    },
+    { "plugin": "@nx/eslint/plugin", "options": { "targetName": "lint" } },
     {
       "plugin": "@nx/js/typescript",
       "include": ["libs/backend/database/*", "libs/backend/messaging/*"],
-      "options": {
-        "typecheck": {
-          "targetName": "typecheck"
-        }
-      }
+      "options": { "typecheck": { "targetName": "typecheck" } }
     },
     {
       "plugin": "@nx/next/plugin",
@@ -63,24 +52,10 @@
         "watchDepsTargetName": "watch-deps"
       }
     },
-    {
-      "plugin": "@nx/playwright/plugin",
-      "options": {
-        "targetName": "e2e"
-      }
-    }
+    { "plugin": "@nx/playwright/plugin", "options": { "targetName": "e2e" } }
   ],
   "generators": {
-    "@nx/react": {
-      "library": {
-        "unitTestRunner": "none"
-      }
-    },
-    "@nx/next": {
-      "application": {
-        "style": "css",
-        "linter": "none"
-      }
-    }
+    "@nx/react": { "library": { "unitTestRunner": "none" } },
+    "@nx/next": { "application": { "style": "css", "linter": "none" } }
   }
 }
